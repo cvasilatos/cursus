@@ -1,0 +1,5 @@
+{"timestamp": "2026-02-17T22:00:44.830083+04:00", "level": "INFO", "name": "__main__.MbtcpServer", "message": "Starting Modbus TCP server at 127.0.0.1:5020"}
+{"timestamp": "2026-02-17T22:00:44.830242+04:00", "level": "DEBUG", "name": "asyncio", "message": "Using selector: KqueueSelector"}
+{"timestamp": "2026-02-17T22:00:44.830463+04:00", "level": "DEBUG", "name": "pymodbus.logging", "message": "Awaiting connections server_listener"}
+{"timestamp": "2026-02-17T22:00:44.830654+04:00", "level": "INFO", "name": "pymodbus.logging", "message": "Server listening."}
+{"timestamp": "2026-02-17T22:00:51.853186+04:00", "level": "INFO", "name": "pymodbus.logging", "message": "Server graceful shutdown."}
