@@ -1,12 +1,11 @@
 import logging
 from typing import cast
 
+from logger_captain.logger import CustomLogger
 from pymodbus.datastore import ModbusDeviceContext, ModbusSequentialDataBlock
 from pymodbus.datastore.context import ModbusServerContext
 from pymodbus.pdu.device import ModbusDeviceIdentification
 from pymodbus.server import StartTcpServer
-
-from protocol_server.cfg.log_configuration import CustomLogger
 
 
 class MbtcpServer:
