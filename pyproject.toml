@@ -20,10 +20,14 @@ dependencies = [
     "readmeai",
     "pre-commit",
     "pymodbus>=3.12.0",
+    "logger-captain",
 ]
 
 [tool.uv]
 managed = true
+
+[tool.uv.sources]
+logger-captain = { path = "../logger-captain/dist/logger_captain-0.1.0-py3-none-any.whl" }
 
 [tool.ruff]
 line-length = 180
