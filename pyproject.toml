@@ -20,7 +20,7 @@ dependencies = [
     "readmeai",
     "pre-commit",
     "pymodbus>=3.12.0",
-    "python-snap7>=1.3",
+    "python-snap7>=1.3,<3.0",
     "decimalog",
 ]
 

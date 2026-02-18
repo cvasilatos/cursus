@@ -19,6 +19,7 @@ class S7commServer:
         self._server = snap7.Server()
 
         # Register data areas: DB, PA, PE, MK, TM, CT
+        # Note: snap7 maintains internal references to these byte arrays
         # DB1: Data Block 1
         db1_data = bytearray(size)
         self._server.register_area(snap7.SrvArea.DB, 1, db1_data)
@@ -46,8 +47,8 @@ class S7commServer:
     def start(self) -> None:
         """Start the S7comm server."""
         self.logger.info(f"Starting S7comm server at {self._ip}:{self._port}")
-        # Start the server with specified TCP port
-        self._server.start(tcpport=self._port)
+        # Bind to specific IP address and TCP port
+        self._server.start_to(self._ip, tcpport=self._port)
         # Keep the server running
         while True:
             self._server.pick_event()
