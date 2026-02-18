@@ -58,6 +58,9 @@ ignore = [
 ]
 unfixable = ["F401"]
 
+[tool.ruff.lint.per-file-ignores]
+"test/**/*.py" = ["SLF001", "ANN202"]
+
 [tool.ruff.lint.isort]
 combine-as-imports = true
 

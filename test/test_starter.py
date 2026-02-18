@@ -1,10 +1,6 @@
 """Tests for the Starter class."""
 
-import threading
-import time
 from unittest.mock import MagicMock, Mock, patch
-
-import pytest
 
 from cursusd.starter import Starter
 
@@ -15,7 +11,7 @@ class TestStarter:
     def test_initialization(self) -> None:
         """Test that Starter initializes with correct attributes."""
         starter = Starter(protocol="mbtcp", port=5020, delay=1)
-        
+
         assert starter._protocol == "mbtcp"
         assert starter._port == 5020
         assert starter._delay == 1
@@ -23,7 +19,7 @@ class TestStarter:
     def test_initialization_different_protocol(self) -> None:
         """Test that Starter initializes with s7comm protocol."""
         starter = Starter(protocol="s7comm", port=5102, delay=2)
-        
+
         assert starter._protocol == "s7comm"
         assert starter._port == 5102
         assert starter._delay == 2
@@ -43,27 +39,27 @@ class TestStarter:
         mock_server_class = MagicMock()
         mock_server_instance = MagicMock()
         mock_thread_instance = MagicMock()
-        
+
         mock_import.return_value = mock_module
         mock_module.MbtcpServer = mock_server_class
         mock_server_class.return_value = mock_server_instance
         mock_thread.return_value = mock_thread_instance
-        
+
         # Create starter and start server
         starter = Starter(protocol="mbtcp", port=5020, delay=1)
         starter.start_server()
-        
+
         # Verify behavior
         mock_import.assert_called_once_with("cursusd.mbtcp.server")
         mock_server_class.assert_called_once_with(ip="localhost", port=5020)
         mock_thread.assert_called_once()
-        
+
         # Check thread creation parameters
         call_kwargs = mock_thread.call_args[1]
         assert call_kwargs["target"] == mock_server_instance.start
         assert call_kwargs["name"] == "MbtcpServer"
         assert call_kwargs["daemon"] is True
-        
+
         mock_thread_instance.start.assert_called_once()
         mock_sleep.assert_called_once_with(1)
 
@@ -82,27 +78,27 @@ class TestStarter:
         mock_server_class = MagicMock()
         mock_server_instance = MagicMock()
         mock_thread_instance = MagicMock()
-        
+
         mock_import.return_value = mock_module
         mock_module.S7commServer = mock_server_class
         mock_server_class.return_value = mock_server_instance
         mock_thread.return_value = mock_thread_instance
-        
+
         # Create starter and start server
         starter = Starter(protocol="s7comm", port=5102, delay=2)
         starter.start_server()
-        
+
         # Verify behavior
         mock_import.assert_called_once_with("cursusd.s7comm.server")
         mock_server_class.assert_called_once_with(ip="localhost", port=5102)
         mock_thread.assert_called_once()
-        
+
         # Check thread creation parameters
         call_kwargs = mock_thread.call_args[1]
         assert call_kwargs["target"] == mock_server_instance.start
         assert call_kwargs["name"] == "S7commServer"
         assert call_kwargs["daemon"] is True
-        
+
         mock_thread_instance.start.assert_called_once()
         mock_sleep.assert_called_once_with(2)
 
@@ -121,12 +117,12 @@ class TestStarter:
         mock_server_class = MagicMock()
         mock_server_instance = MagicMock()
         mock_thread_instance = MagicMock()
-        
+
         mock_import.return_value = mock_module
         mock_module.MbtcpServer = mock_server_class
         mock_server_class.return_value = mock_server_instance
         mock_thread.return_value = mock_thread_instance
-        
+
         # Test with different delay values
         for delay_value in [1, 5, 10]:
             mock_sleep.reset_mock()
