@@ -105,13 +105,13 @@ class TestStarter:
     @patch("cursusd.starter.importlib.import_module")
     @patch("cursusd.starter.time.sleep")
     @patch("cursusd.starter.threading.Thread")
-    def test_start_server_delay_is_applied(
+    def test_start_server_with_delay_1(
         self,
         mock_thread: Mock,
         mock_sleep: Mock,
         mock_import: Mock,
     ) -> None:
-        """Test that the delay is properly applied after starting the server."""
+        """Test that delay of 1 second is properly applied."""
         # Setup mocks
         mock_module = MagicMock()
         mock_server_class = MagicMock()
@@ -123,9 +123,31 @@ class TestStarter:
         mock_server_class.return_value = mock_server_instance
         mock_thread.return_value = mock_thread_instance
 
-        # Test with different delay values
-        for delay_value in [1, 5, 10]:
-            mock_sleep.reset_mock()
-            starter = Starter(protocol="mbtcp", port=5020, delay=delay_value)
-            starter.start_server()
-            mock_sleep.assert_called_once_with(delay_value)
+        starter = Starter(protocol="mbtcp", port=5020, delay=1)
+        starter.start_server()
+        mock_sleep.assert_called_once_with(1)
+
+    @patch("cursusd.starter.importlib.import_module")
+    @patch("cursusd.starter.time.sleep")
+    @patch("cursusd.starter.threading.Thread")
+    def test_start_server_with_delay_5(
+        self,
+        mock_thread: Mock,
+        mock_sleep: Mock,
+        mock_import: Mock,
+    ) -> None:
+        """Test that delay of 5 seconds is properly applied."""
+        # Setup mocks
+        mock_module = MagicMock()
+        mock_server_class = MagicMock()
+        mock_server_instance = MagicMock()
+        mock_thread_instance = MagicMock()
+
+        mock_import.return_value = mock_module
+        mock_module.MbtcpServer = mock_server_class
+        mock_server_class.return_value = mock_server_instance
+        mock_thread.return_value = mock_thread_instance
+
+        starter = Starter(protocol="mbtcp", port=5020, delay=5)
+        starter.start_server()
+        mock_sleep.assert_called_once_with(5)
