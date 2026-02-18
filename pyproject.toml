@@ -22,6 +22,8 @@ dependencies = [
     "pymodbus>=3.12.0",
     "python-snap7>=1.3,<3.0",
     "decimalog",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
 ]
 
 [tool.uv]
@@ -67,3 +69,10 @@ indent-style = "space"
 python = "./.venv/bin/python"
 python-version = "3.14"
 root = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=cursusd --cov-report=term-missing"
