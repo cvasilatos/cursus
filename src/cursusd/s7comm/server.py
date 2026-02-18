@@ -9,7 +9,17 @@ class S7commServer:
     """S7comm server implementation using snap7."""
 
     def __init__(self, ip: str, port: int, size: int = 32000) -> None:
-        """Initialize the S7comm server with the specified IP, port, and data block size."""
+        """Initialize the S7comm server with the specified IP, port, and data block size.
+
+        Args:
+            ip: The IP address to bind the server to (e.g., "127.0.0.1" or "0.0.0.0").
+            port: The TCP port number to listen on (default S7comm port is 102).
+            size: The size of the memory areas in bytes. Defaults to 32000.
+                  This size applies to all S7 data areas: Data Block (DB1), Process
+                  Outputs (PA), Process Inputs (PE), Merkers memory (MK), Timers (TM),
+                  and Counters (CT).
+
+        """
         self.logger: CustomLogger = cast("CustomLogger", logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}"))
         self._ip: str = ip
         self._port: int = port
@@ -45,7 +55,17 @@ class S7commServer:
         self._server.register_area(snap7.SrvArea.CT, 0, ct_data)
 
     def start(self) -> None:
-        """Start the S7comm server."""
+        """Start the S7comm server.
+
+        Starts the S7comm server and blocks indefinitely, listening for
+        incoming client connections on the configured IP address and port.
+        The server continuously processes events using the snap7 event loop.
+
+        Note:
+            This is a blocking call. The server will run continuously until
+            interrupted (e.g., by Ctrl+C or external signal).
+
+        """
         self.logger.info(f"Starting S7comm server at {self._ip}:{self._port}")
         # Bind to specific IP address and TCP port
         self._server.start_to(self._ip, tcpport=self._port)
