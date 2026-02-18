@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+
 from cursusd.starter import Starter
 
 
@@ -102,16 +104,18 @@ class TestStarter:
         mock_thread_instance.start.assert_called_once()
         mock_sleep.assert_called_once_with(2)
 
+    @pytest.mark.parametrize("delay_value", [1, 2, 5])
     @patch("cursusd.starter.importlib.import_module")
     @patch("cursusd.starter.time.sleep")
     @patch("cursusd.starter.threading.Thread")
-    def test_start_server_with_delay_1(
+    def test_start_server_with_various_delays(
         self,
         mock_thread: Mock,
         mock_sleep: Mock,
         mock_import: Mock,
+        delay_value: int,
     ) -> None:
-        """Test that delay of 1 second is properly applied."""
+        """Test that various delay values are properly applied."""
         # Setup mocks
         mock_module = MagicMock()
         mock_server_class = MagicMock()
@@ -123,31 +127,6 @@ class TestStarter:
         mock_server_class.return_value = mock_server_instance
         mock_thread.return_value = mock_thread_instance
 
-        starter = Starter(protocol="mbtcp", port=5020, delay=1)
+        starter = Starter(protocol="mbtcp", port=5020, delay=delay_value)
         starter.start_server()
-        mock_sleep.assert_called_once_with(1)
-
-    @patch("cursusd.starter.importlib.import_module")
-    @patch("cursusd.starter.time.sleep")
-    @patch("cursusd.starter.threading.Thread")
-    def test_start_server_with_delay_5(
-        self,
-        mock_thread: Mock,
-        mock_sleep: Mock,
-        mock_import: Mock,
-    ) -> None:
-        """Test that delay of 5 seconds is properly applied."""
-        # Setup mocks
-        mock_module = MagicMock()
-        mock_server_class = MagicMock()
-        mock_server_instance = MagicMock()
-        mock_thread_instance = MagicMock()
-
-        mock_import.return_value = mock_module
-        mock_module.MbtcpServer = mock_server_class
-        mock_server_class.return_value = mock_server_instance
-        mock_thread.return_value = mock_thread_instance
-
-        starter = Starter(protocol="mbtcp", port=5020, delay=5)
-        starter.start_server()
-        mock_sleep.assert_called_once_with(5)
+        mock_sleep.assert_called_once_with(delay_value)
