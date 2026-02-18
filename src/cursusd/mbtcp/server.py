@@ -1,7 +1,7 @@
-import logging
+import logging  # noqa: D100
 from typing import cast
 
-from logger_captain.logger import CustomLogger
+from decimalog.logger import CustomLogger
 from pymodbus.datastore import ModbusDeviceContext, ModbusSequentialDataBlock
 from pymodbus.datastore.context import ModbusServerContext
 from pymodbus.pdu.device import ModbusDeviceIdentification
@@ -9,7 +9,10 @@ from pymodbus.server import StartTcpServer
 
 
 class MbtcpServer:
+    """Modbus TCP server implementation using pymodbus."""
+
     def __init__(self, ip: str, port: int, size: int = 32000) -> None:
+        """Initialize the Modbus TCP server with the specified IP, port, and data block size."""
         self.logger: CustomLogger = cast("CustomLogger", logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}"))
         self._ip: str = ip
         self._port: int = port
@@ -33,11 +36,12 @@ class MbtcpServer:
         self._identity.MajorMinorRevision = "03.01.02"
 
     def start(self) -> None:
+        """Start the Modbus TCP server."""
         self.logger.info(f"Starting Modbus TCP server at {self._ip}:{self._port}")
         StartTcpServer(context=self._context, identity=self._identity, address=(self._ip, self._port))
 
 
 if __name__ == "__main__":
-    CustomLogger.setup_logging("logs", "protocol_server", level="TRACE")
+    CustomLogger.setup_logging("logs", "cursusd", level="TRACE")
     server = MbtcpServer(ip="127.0.0.1", port=5020, size=32000)
     server.start()

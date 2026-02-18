@@ -1,8 +1,8 @@
 _commit: a046d85
 _src_path: https://github.com/cvasilatos/python-template-project.git
 description: The server for ICS protocols
-project_name: Protocol Server
-project_slug: protocol_server
+project_name: Cursus Daemon
+project_slug: cursusd
 python_minor_version: 3.12.12
 python_target_version: '312'
 python_version: '3.12'
