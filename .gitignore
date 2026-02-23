@@ -1,7 +1,9 @@
-.mypy_cache/
-.ruff_cache/
-__pycache__/
 .venv/
-.coverage
+.ruff_cache/
 .pytest_cache/
-htmlcov/
+__pycache__/
+dist/
+build/
+logs/
+site/
+.coverage

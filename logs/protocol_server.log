@@ -1,5 +1,0 @@
-2026-02-17 22:00:44,830 - [INFO] - __main__.M - Starting Modbus TCP server at 127.0.0.1:5020
-2026-02-17 22:00:44,830 - [DEBUG] - asyncio - Using selector: KqueueSelector
-2026-02-17 22:00:44,830 - [DEBUG] - pymodbus.l - Awaiting connections server_listener
-2026-02-17 22:00:44,830 - [INFO] - pymodbus.l - Server listening.
-2026-02-17 22:00:51,853 - [INFO] - pymodbus.l - Server graceful shutdown.
