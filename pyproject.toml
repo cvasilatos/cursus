@@ -14,23 +14,20 @@ version = "0.1.0"
 description = "The server for ICS protocols"
 requires-python = ">=3.12"
 dependencies = [
-    "ruff",
-    "readmeai",
-    "pre-commit",
     "pymodbus>=3.12.0",
     "python-snap7>=1.3,<3.0",
     "decimalog",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
+dev = [
+    "ruff>=0.15.1",
+    "ty>=0.0.17",
+]
+
 test = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",
-]
-
-[dependency-groups]
-dev = [
-    "pytest>=9.0.2",
 ]
 
 [tool.uv]
@@ -39,50 +36,7 @@ managed = true
 [tool.uv.sources]
 decimalog = { git = "https://github.com/cvasilatos/decimalog.git" }
 
-[tool.ruff]
-line-length = 180
-target-version = "py312"
-exclude = [".git", ".mypy_cache", ".ruff_cache", "node_modules", "venv", ".venv"]
-
-[tool.ruff.lint]
-select = ["ALL"]
-ignore = [
-    "PLR0913",
-    "PLR2004",
-    "G004",
-    "INP001",
-    "ANN401",
-    "COM812",
-    "TRY003",
-    "EM101",
-    "EM102",
-    "BLE001",
-    "T201",
-    "S311",
-    "C408",
-    "S101",
-    "PERF203",
-]
-unfixable = ["F401"]
-
-[tool.ruff.lint.per-file-ignores]
-"test/**/*.py" = ["SLF001", "ANN202"]
-
-[tool.ruff.lint.isort]
-combine-as-imports = true
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-
 [tool.ty.environment]
 python = "./.venv/bin/python"
 python-version = "3.14"
 root = ["src"]
-
-[tool.pytest.ini_options]
-testpaths = ["test"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = "-v --cov=cursusd --cov-report=term-missing"
