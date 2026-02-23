@@ -34,7 +34,9 @@ class TestMbtcpServer:
         assert server._identity.VendorName == "WAGO"
         assert server._identity.ProductCode == "750-881"
         assert server._identity.VendorUrl == "https://www.wago.com"
-        assert server._identity.ProductName == "ETHERNET Programmable Fieldbus Controller"
+        assert (
+            server._identity.ProductName == "ETHERNET Programmable Fieldbus Controller"
+        )
         assert server._identity.ModelName == "PFC200"
         assert server._identity.MajorMinorRevision == "03.01.02"
 

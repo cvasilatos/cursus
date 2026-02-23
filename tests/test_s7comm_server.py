@@ -112,7 +112,9 @@ class TestS7commServer:
         with contextlib.suppress(KeyboardInterrupt):
             server.start()
 
-        mock_server_instance.start_to.assert_called_once_with("192.168.1.50", tcpport=5103)
+        mock_server_instance.start_to.assert_called_once_with(
+            "192.168.1.50", tcpport=5103
+        )
 
     @patch("cursusd.s7comm.server.snap7.Server")
     def test_server_event_loop(self, mock_server_class: Mock) -> None:
