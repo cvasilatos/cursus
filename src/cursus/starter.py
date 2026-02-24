@@ -40,8 +40,8 @@ class Starter:
             AttributeError: If the server class does not exist in the module.
 
         """
-        CustomLogger.setup_logging("logs", "cursusd", level="TRACE", class_length=30)
-        module: ModuleType = importlib.import_module(f"cursusd.{self._protocol.lower()}.server")
+        CustomLogger.setup_logging("logs", "cursus", level="TRACE", class_length=30)
+        module: ModuleType = importlib.import_module(f"cursus.{self._protocol.lower()}.server")
         server_class = getattr(module, f"{self._protocol.capitalize()}Server")
         server = server_class(ip="localhost", port=self._port)
         server_thread = threading.Thread(target=server.start, name=f"{self._protocol.capitalize()}Server", daemon=True)

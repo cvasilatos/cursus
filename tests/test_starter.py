@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from cursusd.starter import Starter
+from cursus.starter import Starter
 
 
 class TestStarter:
@@ -26,9 +26,9 @@ class TestStarter:
         assert starter._port == 5102
         assert starter._delay == 2
 
-    @patch("cursusd.starter.importlib.import_module")
-    @patch("cursusd.starter.time.sleep")
-    @patch("cursusd.starter.threading.Thread")
+    @patch("cursus.starter.importlib.import_module")
+    @patch("cursus.starter.time.sleep")
+    @patch("cursus.starter.threading.Thread")
     def test_start_server_mbtcp(
         self,
         mock_thread: Mock,
@@ -52,7 +52,7 @@ class TestStarter:
         starter.start_server()
 
         # Verify behavior
-        mock_import.assert_called_once_with("cursusd.mbtcp.server")
+        mock_import.assert_called_once_with("cursus.mbtcp.server")
         mock_server_class.assert_called_once_with(ip="localhost", port=5020)
         mock_thread.assert_called_once()
 
@@ -65,9 +65,9 @@ class TestStarter:
         mock_thread_instance.start.assert_called_once()
         mock_sleep.assert_called_once_with(1)
 
-    @patch("cursusd.starter.importlib.import_module")
-    @patch("cursusd.starter.time.sleep")
-    @patch("cursusd.starter.threading.Thread")
+    @patch("cursus.starter.importlib.import_module")
+    @patch("cursus.starter.time.sleep")
+    @patch("cursus.starter.threading.Thread")
     def test_start_server_s7comm(
         self,
         mock_thread: Mock,
@@ -91,7 +91,7 @@ class TestStarter:
         starter.start_server()
 
         # Verify behavior
-        mock_import.assert_called_once_with("cursusd.s7comm.server")
+        mock_import.assert_called_once_with("cursus.s7comm.server")
         mock_server_class.assert_called_once_with(ip="localhost", port=5102)
         mock_thread.assert_called_once()
 
@@ -105,9 +105,9 @@ class TestStarter:
         mock_sleep.assert_called_once_with(2)
 
     @pytest.mark.parametrize("delay_value", [1, 2, 5])
-    @patch("cursusd.starter.importlib.import_module")
-    @patch("cursusd.starter.time.sleep")
-    @patch("cursusd.starter.threading.Thread")
+    @patch("cursus.starter.importlib.import_module")
+    @patch("cursus.starter.time.sleep")
+    @patch("cursus.starter.threading.Thread")
     def test_start_server_with_various_delays(
         self,
         mock_thread: Mock,

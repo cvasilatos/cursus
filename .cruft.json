@@ -5,7 +5,7 @@
   "context": {
     "cookiecutter": {
       "project_name": "Cursus Daemon",
-      "project_slug": "cursusd",
+      "project_slug": "cursus",
       "author_name": "Christoforos Vasilatos",
       "python_version": "3.12",
       "_template": "https://github.com/cvasilatos/python-standards.git",

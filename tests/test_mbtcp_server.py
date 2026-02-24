@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
-from cursusd.mbtcp.server import MbtcpServer
+from cursus.mbtcp.server import MbtcpServer
 
 
 class TestMbtcpServer:
@@ -40,7 +40,7 @@ class TestMbtcpServer:
         assert server._identity.ModelName == "PFC200"
         assert server._identity.MajorMinorRevision == "03.01.02"
 
-    @patch("cursusd.mbtcp.server.ModbusSequentialDataBlock")
+    @patch("cursus.mbtcp.server.ModbusSequentialDataBlock")
     def test_data_blocks_initialized(self, mock_data_block: Mock) -> None:
         """Test that all data blocks are initialized with correct size."""
         custom_size = 16000
@@ -58,7 +58,7 @@ class TestMbtcpServer:
             assert args[0] == 0  # Starting address
             assert len(args[1]) == custom_size  # Size of data block
 
-    @patch("cursusd.mbtcp.server.StartTcpServer")
+    @patch("cursus.mbtcp.server.StartTcpServer")
     def test_start_server(self, mock_start_tcp: Mock) -> None:
         """Test that the server starts with correct parameters."""
         server = MbtcpServer(ip="127.0.0.1", port=5020)
@@ -73,7 +73,7 @@ class TestMbtcpServer:
         assert call_kwargs["identity"] == server._identity
         assert call_kwargs["address"] == ("127.0.0.1", 5020)
 
-    @patch("cursusd.mbtcp.server.StartTcpServer")
+    @patch("cursus.mbtcp.server.StartTcpServer")
     def test_start_server_with_different_address(self, mock_start_tcp: Mock) -> None:
         """Test that the server starts with different IP and port."""
         server = MbtcpServer(ip="192.168.1.50", port=5021)
@@ -92,8 +92,8 @@ class TestMbtcpServer:
         # Since single=True, there should be only one device context
         assert hasattr(server._context, "single")
 
-    @patch("cursusd.mbtcp.server.ModbusDeviceContext")
-    @patch("cursusd.mbtcp.server.ModbusServerContext")
+    @patch("cursus.mbtcp.server.ModbusDeviceContext")
+    @patch("cursus.mbtcp.server.ModbusServerContext")
     def test_server_context_creation(
         self,
         mock_server_context: Mock,

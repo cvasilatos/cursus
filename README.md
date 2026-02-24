@@ -8,7 +8,7 @@ A Python server daemon for Industrial Control System (ICS) protocols. CursusD pr
   - Supports all standard Modbus data tables (Coils, Discrete Inputs, Holding Registers, Input Registers)
   - Configurable data block sizes (default: 32000 registers)
   - Emulates WAGO PFC200 device identity
-  
+
 - **S7comm Server**: Siemens S7 protocol server implementation using python-snap7
   - Supports multiple S7 data areas (DB, PA, PE, MK, TM, CT)
   - Configurable memory sizes
@@ -55,7 +55,7 @@ pip install -e ".[test]"
 #### Modbus TCP Server
 
 ```python
-from cursusd.mbtcp.server import MbtcpServer
+from cursus.mbtcp.server import MbtcpServer
 
 # Create and start a Modbus TCP server
 server = MbtcpServer(ip="127.0.0.1", port=502, size=32000)
@@ -65,13 +65,13 @@ server.start()  # Blocks and runs the server
 Or run directly from command line:
 
 ```bash
-python -m cursusd.mbtcp.server
+python -m cursus.mbtcp.server
 ```
 
 #### S7comm Server
 
 ```python
-from cursusd.s7comm.server import S7commServer
+from cursus.s7comm.server import S7commServer
 
 # Create and start an S7comm server
 server = S7commServer(ip="127.0.0.1", port=102, size=32000)
@@ -81,7 +81,7 @@ server.start()  # Blocks and runs the server
 Or run directly from command line:
 
 ```bash
-python -m cursusd.s7comm.server
+python -m cursus.s7comm.server
 ```
 
 ### Using the Starter Class
@@ -89,7 +89,7 @@ python -m cursusd.s7comm.server
 The Starter class provides a convenient way to initialize and start protocol servers in daemon threads:
 
 ```python
-from cursusd.starter import Starter
+from cursus.starter import Starter
 
 # Start a Modbus TCP server
 mbtcp_starter = Starter(protocol="mbtcp", port=502, delay=1)
@@ -109,7 +109,7 @@ s7comm_starter.start_server()
 uv run pytest test/
 
 # Run tests with coverage report
-uv run pytest test/ --cov=cursusd --cov-report=term-missing
+uv run pytest test/ --cov=cursus --cov-report=term-missing
 
 # Run tests with verbose output
 uv run pytest test/ -v
@@ -122,7 +122,7 @@ Alternatively, using pytest directly:
 pytest test/
 
 # Run tests with coverage report
-pytest test/ --cov=cursusd --cov-report=term-missing
+pytest test/ --cov=cursus --cov-report=term-missing
 
 # Run tests with verbose output
 pytest test/ -v

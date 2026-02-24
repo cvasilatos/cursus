@@ -5,13 +5,13 @@ from unittest.mock import MagicMock, Mock, patch
 
 import snap7
 
-from cursusd.s7comm.server import S7commServer
+from cursus.s7comm.server import S7commServer
 
 
 class TestS7commServer:
     """Test suite for the S7commServer class."""
 
-    @patch("cursusd.s7comm.server.snap7.Server")
+    @patch("cursus.s7comm.server.snap7.Server")
     def test_initialization_default_size(self, mock_server_class: Mock) -> None:
         """Test that S7commServer initializes with default size."""
         mock_server_instance = MagicMock()
@@ -24,7 +24,7 @@ class TestS7commServer:
         assert server._size == 32000
         assert server._server == mock_server_instance
 
-    @patch("cursusd.s7comm.server.snap7.Server")
+    @patch("cursus.s7comm.server.snap7.Server")
     def test_initialization_custom_size(self, mock_server_class: Mock) -> None:
         """Test that S7commServer initializes with custom size."""
         mock_server_instance = MagicMock()
@@ -37,7 +37,7 @@ class TestS7commServer:
         assert server._port == 5103
         assert server._size == custom_size
 
-    @patch("cursusd.s7comm.server.snap7.Server")
+    @patch("cursus.s7comm.server.snap7.Server")
     def test_register_all_data_areas(self, mock_server_class: Mock) -> None:
         """Test that all data areas are registered correctly."""
         mock_server_instance = MagicMock()
@@ -64,7 +64,7 @@ class TestS7commServer:
         assert actual_calls[5][0][0] == snap7.SrvArea.CT
         assert actual_calls[5][0][1] == 0
 
-    @patch("cursusd.s7comm.server.snap7.Server")
+    @patch("cursus.s7comm.server.snap7.Server")
     def test_data_area_sizes(self, mock_server_class: Mock) -> None:
         """Test that data areas are initialized with correct size."""
         mock_server_instance = MagicMock()
@@ -80,7 +80,7 @@ class TestS7commServer:
             assert len(bytearray_data) == custom_size
             assert isinstance(bytearray_data, bytearray)
 
-    @patch("cursusd.s7comm.server.snap7.Server")
+    @patch("cursus.s7comm.server.snap7.Server")
     def test_start_server(self, mock_server_class: Mock) -> None:
         """Test that the server starts with correct parameters."""
         mock_server_instance = MagicMock()
@@ -100,7 +100,7 @@ class TestS7commServer:
         # Verify pick_event was called at least once
         mock_server_instance.pick_event.assert_called()
 
-    @patch("cursusd.s7comm.server.snap7.Server")
+    @patch("cursus.s7comm.server.snap7.Server")
     def test_start_server_different_address(self, mock_server_class: Mock) -> None:
         """Test that the server starts with different IP and port."""
         mock_server_instance = MagicMock()
@@ -116,7 +116,7 @@ class TestS7commServer:
             "192.168.1.50", tcpport=5103
         )
 
-    @patch("cursusd.s7comm.server.snap7.Server")
+    @patch("cursus.s7comm.server.snap7.Server")
     def test_server_event_loop(self, mock_server_class: Mock) -> None:
         """Test that the server continuously picks events."""
         mock_server_instance = MagicMock()
@@ -140,7 +140,7 @@ class TestS7commServer:
         # Verify pick_event was called multiple times
         assert mock_server_instance.pick_event.call_count == 4
 
-    @patch("cursusd.s7comm.server.snap7.Server")
+    @patch("cursus.s7comm.server.snap7.Server")
     def test_bytearray_initialization(self, mock_server_class: Mock) -> None:
         """Test that bytearrays are properly initialized."""
         mock_server_instance = MagicMock()

@@ -15,7 +15,7 @@ plugins:
   - mkdocstrings:
         handlers:
           python:
-            paths: ["src/cursusd/"]
+            paths: ["src/cursus/"]
 
 markdown_extensions:
   - admonition
