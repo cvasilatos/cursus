@@ -156,6 +156,7 @@ MbtcpServer(ip: str, port: int, size: int = 32000)
 ```
 
 **Parameters:**
+
 - `ip`: IP address to bind the server to
 - `port`: TCP port number (default Modbus port is 502)
 - `size`: Size of data blocks in registers (default: 32000)
@@ -167,6 +168,7 @@ S7commServer(ip: str, port: int, size: int = 32000)
 ```
 
 **Parameters:**
+
 - `ip`: IP address to bind the server to
 - `port`: TCP port number (default S7 port is 102)
 - `size`: Size of memory areas in bytes (default: 32000)
@@ -178,6 +180,7 @@ Starter(protocol: str, port: int, delay: int)
 ```
 
 **Parameters:**
+
 - `protocol`: Protocol name ("mbtcp" or "s7comm")
 - `port`: Port number for the server
 - `delay`: Delay in seconds after starting the server
@@ -191,4 +194,4 @@ This project is open source. Please refer to the LICENSE file for more informati
 - Python >= 3.12
 - pymodbus >= 3.12.0
 - python-snap7 >= 1.3, < 3.0
-- decimalog (custom logging library)
+- decima (custom logging library)
