@@ -4,10 +4,10 @@ import threading
 import time
 from typing import TYPE_CHECKING, cast
 
-from decima.logger import CustomLogger
-
 if TYPE_CHECKING:
     from types import ModuleType
+
+    from decima.logger import CustomLogger
 
 
 class Starter:
@@ -40,7 +40,6 @@ class Starter:
             AttributeError: If the server class does not exist in the module.
 
         """
-        CustomLogger.setup_logging("logs", "cursus", level="TRACE", class_length=30)
         module: ModuleType = importlib.import_module(f"cursus.{self._protocol.lower()}.server")
         server_class = getattr(module, f"{self._protocol.capitalize()}Server")
         server = server_class(ip="localhost", port=self._port)
