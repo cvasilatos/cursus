@@ -1,4 +1,4 @@
-site_name: {{cookiecutter.project_slug}}
+site_name: Cursus Daemon
 theme:
   name: readthedocs
   color_mode: dark
@@ -6,7 +6,8 @@ theme:
 
 nav:
   - Home: index.md
-  - API: api.md
+  - API Reference:
+    - Starter: api/starter.md
 
 plugins:
   - search
@@ -14,7 +15,7 @@ plugins:
   - mkdocstrings:
         handlers:
           python:
-            paths: ["src/{{cookiecutter.project_slug}}/"]
+            paths: ["src/cursusd/"]
 
 markdown_extensions:
   - admonition

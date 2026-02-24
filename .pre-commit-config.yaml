@@ -18,3 +18,15 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+      - id: pytest-check
+        name: Run pytest
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+      - id: check-mkdocs
+        name: check-mkdocs
+        pass_filenames: false
+        entry: mkdocs build --strict
+        language: system

@@ -1,8 +1,10 @@
-import logging  # noqa: D100
-from typing import cast
+import logging
+from typing import TYPE_CHECKING, cast
 
 import snap7
-from decimalog.logger import CustomLogger
+
+if TYPE_CHECKING:
+    from decima.logger import CustomLogger
 
 
 class S7commServer:
@@ -72,9 +74,3 @@ class S7commServer:
         # Keep the server running
         while True:
             self._server.pick_event()
-
-
-if __name__ == "__main__":
-    CustomLogger.setup_logging("logs", "cursusd", level="TRACE")
-    server = S7commServer(ip="127.0.0.1", port=5102, size=32000)
-    server.start()
