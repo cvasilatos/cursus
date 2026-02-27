@@ -1,10 +1,11 @@
 """Tests for the S7comm server."""
 
 import contextlib
+import ctypes
+import importlib
 from unittest.mock import MagicMock, Mock, patch
 
 import snap7
-
 from cursus.s7comm.server import S7commServer
 
 
@@ -21,7 +22,7 @@ class TestS7commServer:
 
         assert server._ip == "127.0.0.1"
         assert server._port == 5102
-        assert server._size == 32000
+        assert server._size == 1024
         assert server._server == mock_server_instance
 
     @patch("cursus.s7comm.server.snap7.Server")
@@ -52,7 +53,7 @@ class TestS7commServer:
         # Check the area types and indices
         actual_calls = mock_server_instance.register_area.call_args_list
         assert actual_calls[0][0][0] == snap7.SrvArea.DB
-        assert actual_calls[0][0][1] == 1
+        assert actual_calls[0][0][1] == 0
         assert actual_calls[1][0][0] == snap7.SrvArea.PA
         assert actual_calls[1][0][1] == 0
         assert actual_calls[2][0][0] == snap7.SrvArea.PE
@@ -70,7 +71,7 @@ class TestS7commServer:
         mock_server_instance = MagicMock()
         mock_server_class.return_value = mock_server_instance
 
-        custom_size = 2000
+        custom_size = 64
         _server = S7commServer(ip="127.0.0.1", port=5102, size=custom_size)
 
         # Check that each registered area has the correct size
@@ -78,7 +79,7 @@ class TestS7commServer:
             args, _kwargs = call_args
             bytearray_data = args[2]
             assert len(bytearray_data) == custom_size
-            assert isinstance(bytearray_data, bytearray)
+            assert isinstance(bytearray_data, ctypes.Array)
 
     @patch("cursus.s7comm.server.snap7.Server")
     def test_start_server(self, mock_server_class: Mock) -> None:
@@ -96,7 +97,7 @@ class TestS7commServer:
             server.start()
 
         # Verify start_to was called with correct parameters
-        mock_server_instance.start_to.assert_called_once_with("127.0.0.1", tcpport=5102)
+        mock_server_instance.start_to.assert_called_once_with("127.0.0.1", 5102)
         # Verify pick_event was called at least once
         mock_server_instance.pick_event.assert_called()
 
@@ -112,9 +113,7 @@ class TestS7commServer:
         with contextlib.suppress(KeyboardInterrupt):
             server.start()
 
-        mock_server_instance.start_to.assert_called_once_with(
-            "192.168.1.50", tcpport=5103
-        )
+        mock_server_instance.start_to.assert_called_once_with("192.168.1.50", 5103)
 
     @patch("cursus.s7comm.server.snap7.Server")
     def test_server_event_loop(self, mock_server_class: Mock) -> None:
@@ -154,3 +153,45 @@ class TestS7commServer:
             bytearray_data = args[2]
             # Check that all bytes are initially zero
             assert all(byte == 0 for byte in bytearray_data)
+
+
+def test_s7comm_server_registers_ctypes_arrays(monkeypatch):
+    """Ensure the S7commServer registers ctypes arrays (not Python bytearray).
+
+    This prevents the snap7 `sizeof()` TypeError when a Python `bytearray` is
+    passed to the C API (which expects a ctypes array).
+    """
+    mod = importlib.import_module("cursus.s7comm.server")
+
+    registered = []
+
+    class FakeServer:
+        def __init__(self):
+            pass
+
+        def register_area(self, area, index, userdata):
+            # Should not be a Python bytearray
+            assert not isinstance(userdata, bytearray), "userdata is bytearray"
+            # Should be a ctypes Array instance
+            assert isinstance(userdata, ctypes.Array), (
+                f"userdata is not ctypes.Array: {type(userdata)}"
+            )
+            registered.append((area, index))
+            return 0
+
+        def start_to(self, ip, port):
+            return 0
+
+        def set_param(self, *args, **kwargs):
+            return 0
+
+        def pick_event(self):
+            return 0
+
+    # Patch snap7.Server used by the module to our FakeServer
+    monkeypatch.setattr(mod.snap7, "Server", FakeServer)
+
+    # Instantiate the server; constructor should call register_area
+    srv = mod.S7commServer(ip="127.0.0.1", port=10200, size=64)
+
+    assert registered, "register_area was not called"
