@@ -28,7 +28,7 @@ class Starter:
         self._port: int = port
         self._delay: int = delay
 
-    def start_server(self) -> None:
+    def start_server(self) -> threading.Thread:
         """Start the specified protocol server after a delay.
 
         Dynamically imports the server module based on the protocol name,
@@ -47,3 +47,4 @@ class Starter:
         server_thread.start()
         self.logger.info(f"[+] Started {self._protocol} server on port {self._port}")
         time.sleep(self._delay)
+        return server_thread
