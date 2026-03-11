@@ -36,9 +36,7 @@ class S7commServer:
         # DB1: Data Block 1
         self._db1_data = (c_byte * 64)()
         error = self._server.register_area(snap7.SrvArea.DB, 0, self._db1_data)
-        self.logger.error(
-            f"Initializing S7comm server with IP: {ip}, Port: {port}, Data Block Size: {size} bytes: {error}",
-        )
+        self.logger.info(f"Initializing S7comm server with IP: {ip}, Port: {port}, Data Block Size: {size} bytes: {error}")
 
         # PA: Process outputs
         self._pa_data = (c_byte * size)()
