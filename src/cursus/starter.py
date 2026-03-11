@@ -42,7 +42,7 @@ class Starter:
         """
         module: ModuleType = importlib.import_module(f"cursus.{self._protocol.lower()}.server")
         server_class = getattr(module, f"{self._protocol.capitalize()}Server")
-        server = server_class(ip="localhost", port=self._port)
+        server = server_class(ip="127.0.0.1", port=self._port)
         server_thread = threading.Thread(target=server.start, name=f"{self._protocol.capitalize()}Server", daemon=True)
         server_thread.start()
         self.logger.info(f"[+] Started {self._protocol} server on port {self._port}")

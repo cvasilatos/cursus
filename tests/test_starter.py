@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-
 from cursus.starter import Starter
 
 
@@ -53,7 +52,7 @@ class TestStarter:
 
         # Verify behavior
         mock_import.assert_called_once_with("cursus.mbtcp.server")
-        mock_server_class.assert_called_once_with(ip="localhost", port=5020)
+        mock_server_class.assert_called_once_with(ip="127.0.0.1", port=5020)
         mock_thread.assert_called_once()
 
         # Check thread creation parameters
@@ -92,7 +91,7 @@ class TestStarter:
 
         # Verify behavior
         mock_import.assert_called_once_with("cursus.s7comm.server")
-        mock_server_class.assert_called_once_with(ip="localhost", port=5102)
+        mock_server_class.assert_called_once_with(ip="127.0.0.1", port=5102)
         mock_thread.assert_called_once()
 
         # Check thread creation parameters

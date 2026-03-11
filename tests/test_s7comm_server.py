@@ -195,3 +195,54 @@ def test_s7comm_server_registers_ctypes_arrays(monkeypatch):
     srv = mod.S7commServer(ip="127.0.0.1", port=10200, size=64)
 
     assert registered, "register_area was not called"
+
+
+def test_connect_reconnect():
+    """Start a real S7commServer and verify repeated connect/disconnect cycles.
+
+    Each client connection sends random bytes, attempts to read a response,
+    then closes. This better emulates real-world traffic that can trigger
+    server-side failures.
+    """
+    import socket
+    import threading
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 10200))
+        host, port = probe.getsockname()
+
+    srv = S7commServer(ip=host, port=port, size=64)
+    server_errors = []
+
+    def run_server():
+        try:
+            srv.start()
+        except KeyboardInterrupt:
+            return
+        except Exception as exc:  # pragma: no cover - background failure path
+            server_errors.append(exc)
+
+    thread = threading.Thread(target=run_server, daemon=True)
+    thread.start()
+
+    def send_random_payload_and_read(ip_addr, tcp_port):
+        client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_sock.settimeout(0.1)
+        client_sock.connect((ip_addr, tcp_port))
+        for _ in range(100):
+            try:
+                client_sock.sendall(
+                    "0300002402f080320100000350000e0005056e140a10020001a20981a6338c00040008b7".encode()
+                )
+                client_sock.recv(1024)
+            except (socket.timeout, ConnectionResetError, BrokenPipeError):
+                client_sock.close()
+                client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                client_sock.settimeout(0.1)
+                client_sock.connect((ip_addr, tcp_port))
+                continue
+
+    send_random_payload_and_read(host, port)
+
+    assert not server_errors
+    assert thread.is_alive()

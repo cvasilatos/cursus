@@ -34,31 +34,31 @@ class S7commServer:
         # Register data areas: DB, PA, PE, MK, TM, CT
         # Use ctypes arrays for compatibility with snap7 C API
         # DB1: Data Block 1
-        db1_data = (c_byte * 64)()
-        error = self._server.register_area(snap7.SrvArea.DB, 0, db1_data)
+        self._db1_data = (c_byte * 64)()
+        error = self._server.register_area(snap7.SrvArea.DB, 0, self._db1_data)
         self.logger.error(
             f"Initializing S7comm server with IP: {ip}, Port: {port}, Data Block Size: {size} bytes: {error}",
         )
 
         # PA: Process outputs
-        pa_data = (c_byte * size)()
-        self._server.register_area(snap7.SrvArea.PA, 0, pa_data)
+        self._pa_data = (c_byte * size)()
+        self._server.register_area(snap7.SrvArea.PA, 0, self._pa_data)
 
         # PE: Process inputs
-        pe_data = (c_byte * size)()
-        self._server.register_area(snap7.SrvArea.PE, 0, pe_data)
+        self._pe_data = (c_byte * size)()
+        self._server.register_area(snap7.SrvArea.PE, 0, self._pe_data)
 
         # MK: Merkers memory
-        mk_data = (c_byte * size)()
-        self._server.register_area(snap7.SrvArea.MK, 0, mk_data)
+        self._mk_data = (c_byte * size)()
+        self._server.register_area(snap7.SrvArea.MK, 0, self._mk_data)
 
         # Timer data area
-        tm_data = (c_byte * size)()
-        self._server.register_area(snap7.SrvArea.TM, 0, tm_data)
+        self._tm_data = (c_byte * size)()
+        self._server.register_area(snap7.SrvArea.TM, 0, self._tm_data)
 
         # Counter data area
-        ct_data = (c_byte * size)()
-        self._server.register_area(snap7.SrvArea.CT, 0, ct_data)
+        self._ct_data = (c_byte * size)()
+        self._server.register_area(snap7.SrvArea.CT, 0, self._ct_data)
 
     def start(self) -> None:
         """Start the S7comm server.
@@ -75,4 +75,14 @@ class S7commServer:
         self.logger.info(f"Starting S7comm server at {self._ip}:{self._port}")
         self._server.start_to(self._ip, self._port)
         while True:
-            self._server.pick_event()
+            try:
+                self._server.pick_event()
+            except Exception:
+                self.logger.exception("Error occurred while running S7comm server")
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    server = S7commServer(ip="127.0.0.1", port=10200)
+
+    server.start()
