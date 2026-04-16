@@ -1,71 +1,72 @@
+import importlib
 import logging
 import time
-from typing import TYPE_CHECKING, Any, cast
+from dataclasses import dataclass
+from types import ModuleType
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from decima.logger import CustomLogger
 
 
-def _import_pydnp3() -> tuple[Any, Any, Any]:
+@dataclass(slots=True)
+class Dnp3OutstationConfig:
+    """Configuration for the DNP3 outstation emulator."""
+
+    database_size: int = 10
+    event_buffer_size: int = 10
+    local_addr: int = 10
+    remote_addr: int = 1
+
+
+def _import_pydnp3() -> tuple[ModuleType, ModuleType, ModuleType]:
     try:
-        from pydnp3 import asiodnp3, asiopal, opendnp3
+        pydnp3_module = importlib.import_module("pydnp3")
     except ModuleNotFoundError as exc:
         msg = "DNP3 support requires 'pydnp3'. Install it with: pip install pydnp3"
         raise RuntimeError(msg) from exc
 
-    return asiodnp3, asiopal, opendnp3
+    return pydnp3_module.asiodnp3, pydnp3_module.asiopal, pydnp3_module.opendnp3
 
 
-class _ChannelListener:
-    def __init__(self, asiodnp3: Any, logger: Any) -> None:
-        class Listener(asiodnp3.IChannelListener):
-            def __init__(self, log: Any) -> None:
-                super().__init__()
-                self._logger = log
+def _create_channel_listener(asiodnp3: ModuleType, logger: "CustomLogger") -> object:
+    class ChannelListener(asiodnp3.IChannelListener):
+        def __init__(self, log: "CustomLogger") -> None:
+            super().__init__()
+            self._logger = log
 
-            def OnStateChange(self, state: Any) -> None:  # noqa: N802
-                self._logger.info(f"DNP3 channel state changed to: {state}")
+        def OnStateChange(self, state: object) -> None:  # noqa: N802
+            self._logger.info(f"DNP3 channel state changed to: {state}")
 
-        self.listener = Listener(logger)
+    return ChannelListener(logger)
 
 
-class _CommandHandler:
-    def __init__(self, opendnp3: Any) -> None:
-        class Handler(opendnp3.ICommandHandler):
-            def Start(self) -> None:  # noqa: N802
-                return
+def _create_command_handler(opendnp3: ModuleType) -> object:
+    class CommandHandler(opendnp3.ICommandHandler):
+        def Start(self) -> None:  # noqa: N802
+            return
 
-            def End(self) -> None:  # noqa: N802
-                return
+        def End(self) -> None:  # noqa: N802
+            return
 
-            def Select(self, command: Any, index: int) -> Any:  # noqa: N802
-                return opendnp3.CommandStatus.SUCCESS
+        def Select(self, _command: object, _index: int) -> object:  # noqa: N802
+            return opendnp3.CommandStatus.SUCCESS
 
-            def Operate(self, command: Any, index: int, op_type: Any) -> Any:  # noqa: N802
-                return opendnp3.CommandStatus.SUCCESS
+        def Operate(self, _command: object, _index: int, _op_type: object) -> object:  # noqa: N802
+            return opendnp3.CommandStatus.SUCCESS
 
-        self.handler = Handler()
+    return CommandHandler()
 
 
 class Dnp3Server:
     """DNP3 outstation (emulator) implementation using pydnp3."""
 
-    def __init__(
-        self,
-        ip: str,
-        port: int,
-        database_size: int = 10,
-        event_buffer_size: int = 10,
-        local_addr: int = 10,
-        remote_addr: int = 1,
-    ) -> None:
+    def __init__(self, ip: str, port: int, config: Dnp3OutstationConfig | None = None) -> None:
+        """Initialize the DNP3 outstation server."""
         self.logger: CustomLogger = cast("CustomLogger", logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}"))
         self._ip: str = ip
         self._port: int = port
-        self._database_size: int = database_size
-        self._event_buffer_size: int = event_buffer_size
-        self._local_addr: int = local_addr
-        self._remote_addr: int = remote_addr
+        self._config: Dnp3OutstationConfig = config or Dnp3OutstationConfig()
         self._running: bool = False
 
         asiodnp3, asiopal, opendnp3 = _import_pydnp3()
@@ -75,7 +76,7 @@ class Dnp3Server:
         self._log_handler = asiodnp3.ConsoleLogger().Create()
         self._manager = asiodnp3.DNP3Manager(1, self._log_handler)
         self._retry = asiopal.ChannelRetry().Default()
-        self._listener = _ChannelListener(asiodnp3, self.logger).listener
+        self._listener = _create_channel_listener(asiodnp3, self.logger)
         self._channel = self._manager.AddTCPServer(
             "cursus-dnp3-outstation",
             opendnp3.levels.NORMAL | opendnp3.levels.ALL_COMMS,
@@ -85,13 +86,13 @@ class Dnp3Server:
             self._listener,
         )
 
-        self._stack_config = asiodnp3.OutstationStackConfig(opendnp3.DatabaseSizes.AllTypes(database_size))
-        self._stack_config.outstation.eventBufferConfig = opendnp3.EventBufferConfig().AllTypes(event_buffer_size)
+        self._stack_config = asiodnp3.OutstationStackConfig(opendnp3.DatabaseSizes.AllTypes(self._config.database_size))
+        self._stack_config.outstation.eventBufferConfig = opendnp3.EventBufferConfig().AllTypes(self._config.event_buffer_size)
         self._stack_config.outstation.params.allowUnsolicited = True
-        self._stack_config.link.LocalAddr = local_addr
-        self._stack_config.link.RemoteAddr = remote_addr
+        self._stack_config.link.LocalAddr = self._config.local_addr
+        self._stack_config.link.RemoteAddr = self._config.remote_addr
 
-        self._command_handler = _CommandHandler(opendnp3).handler
+        self._command_handler = _create_command_handler(opendnp3)
         self._outstation = self._channel.AddOutstation(
             "cursus-outstation",
             self._command_handler,
@@ -121,7 +122,7 @@ class Dnp3Server:
         self._outstation.Disable()
         self._manager.Shutdown()
 
-    def update_binary_input(self, index: int, value: bool) -> None:
+    def update_binary_input(self, index: int, *, value: bool) -> None:
         """Update a binary input point in the outstation database."""
         builder = self._asiodnp3.UpdateBuilder()
         builder.Update(self._opendnp3.Binary(value), index)

@@ -2,7 +2,7 @@
 
 from types import SimpleNamespace
 
-from cursus.dnp3.server import Dnp3Server
+from cursus.dnp3.server import Dnp3OutstationConfig, Dnp3Server
 
 
 class _FakeConsoleLogger:
@@ -120,7 +120,7 @@ def test_initialization(monkeypatch) -> None:
         lambda: (asiodnp3, asiopal, opendnp3),
     )
 
-    server = Dnp3Server(ip="127.0.0.1", port=20000)
+    server = Dnp3Server(ip="127.0.0.1", port=20000, config=Dnp3OutstationConfig())
 
     assert server._ip == "127.0.0.1"
     assert server._port == 20000
@@ -140,7 +140,7 @@ def test_start_and_stop(monkeypatch) -> None:
     )
     monkeypatch.setattr("cursus.dnp3.server.time.sleep", lambda _seconds: (_ for _ in ()).throw(KeyboardInterrupt))
 
-    server = Dnp3Server(ip="127.0.0.1", port=20000)
+    server = Dnp3Server(ip="127.0.0.1", port=20000, config=Dnp3OutstationConfig())
     manager = managers[0]
     outstation = manager.channel.outstation
 
@@ -158,7 +158,7 @@ def test_point_updates(monkeypatch) -> None:
         lambda: (asiodnp3, asiopal, opendnp3),
     )
 
-    server = Dnp3Server(ip="127.0.0.1", port=20000)
+    server = Dnp3Server(ip="127.0.0.1", port=20000, config=Dnp3OutstationConfig())
     outstation = managers[0].channel.outstation
 
     server.update_binary_input(index=3, value=True)
@@ -166,4 +166,3 @@ def test_point_updates(monkeypatch) -> None:
 
     assert outstation.applied[0] == ((("Binary", True), 3),)
     assert outstation.applied[1] == ((("Analog", 12.5), 5),)
-
