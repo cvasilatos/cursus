@@ -2,6 +2,7 @@
 
 from types import SimpleNamespace
 
+import pytest
 from cursus.dnp3.server import Dnp3OutstationConfig, Dnp3Server
 
 
@@ -113,7 +114,7 @@ def _build_fake_modules():
     return asiodnp3, asiopal, opendnp3, managers, config
 
 
-def test_initialization(monkeypatch) -> None:
+def test_initialization(monkeypatch: pytest.MonkeyPatch) -> None:
     asiodnp3, asiopal, opendnp3, managers, config = _build_fake_modules()
     monkeypatch.setattr(
         "cursus.dnp3.server._import_pydnp3",
@@ -132,7 +133,7 @@ def test_initialization(monkeypatch) -> None:
     assert managers[0].server_args[4] == 20000
 
 
-def test_start_and_stop(monkeypatch) -> None:
+def test_start_and_stop(monkeypatch: pytest.MonkeyPatch) -> None:
     asiodnp3, asiopal, opendnp3, managers, _config = _build_fake_modules()
     monkeypatch.setattr(
         "cursus.dnp3.server._import_pydnp3",
@@ -155,7 +156,7 @@ def test_start_and_stop(monkeypatch) -> None:
     assert manager.shutdown_called is True
 
 
-def test_point_updates(monkeypatch) -> None:
+def test_point_updates(monkeypatch: pytest.MonkeyPatch) -> None:
     asiodnp3, asiopal, opendnp3, managers, _config = _build_fake_modules()
     monkeypatch.setattr(
         "cursus.dnp3.server._import_pydnp3",

@@ -87,8 +87,12 @@ class Dnp3Server:
             self._listener,
         )
 
-        self._stack_config = asiodnp3.OutstationStackConfig(opendnp3.DatabaseSizes.AllTypes(self._config.database_size))
-        self._stack_config.outstation.eventBufferConfig = opendnp3.EventBufferConfig().AllTypes(self._config.event_buffer_size)
+        self._stack_config = asiodnp3.OutstationStackConfig(
+            opendnp3.DatabaseSizes.AllTypes(self._config.database_size),
+        )
+        self._stack_config.outstation.eventBufferConfig = opendnp3.EventBufferConfig().AllTypes(
+            self._config.event_buffer_size,
+        )
         self._stack_config.outstation.params.allowUnsolicited = True
         self._stack_config.link.LocalAddr = self._config.local_addr
         self._stack_config.link.RemoteAddr = self._config.remote_addr
