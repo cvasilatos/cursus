@@ -138,7 +138,11 @@ def test_start_and_stop(monkeypatch) -> None:
         "cursus.dnp3.server._import_pydnp3",
         lambda: (asiodnp3, asiopal, opendnp3),
     )
-    monkeypatch.setattr("cursus.dnp3.server.time.sleep", lambda _seconds: (_ for _ in ()).throw(KeyboardInterrupt))
+
+    def _raise_keyboard_interrupt(_seconds: int) -> None:
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr("cursus.dnp3.server.time.sleep", _raise_keyboard_interrupt)
 
     server = Dnp3Server(ip="127.0.0.1", port=20000, config=Dnp3OutstationConfig())
     manager = managers[0]
