@@ -119,14 +119,14 @@ class TestStarter:
         mock_thread_instance = MagicMock()
 
         mock_import.return_value = mock_module
-        mock_module.Dnp3Server = mock_server_class
+        mock_module.Dnp3DockerServer = mock_server_class
         mock_server_class.return_value = mock_server_instance
         mock_thread.return_value = mock_thread_instance
 
         starter = Starter(protocol="dnp3", port=20000, delay=2)
         starter.start_server()
 
-        mock_import.assert_called_once_with("cursus.dnp3.server")
+        mock_import.assert_called_once_with("cursus.dnp3.docker_server")
         mock_server_class.assert_called_once_with(ip="127.0.0.1", port=20000)
         call_kwargs = mock_thread.call_args[1]
         assert call_kwargs["target"] == mock_server_instance.start

@@ -40,8 +40,15 @@ class Starter:
             AttributeError: If the server class does not exist in the module.
 
         """
-        module: ModuleType = importlib.import_module(f"cursus.{self._protocol.lower()}.server")
-        server_class = getattr(module, f"{self._protocol.capitalize()}Server")
+        protocol = self._protocol.lower()
+        module_name = f"cursus.{protocol}.server"
+        class_name = f"{self._protocol.capitalize()}Server"
+        if protocol == "dnp3":
+            module_name = "cursus.dnp3.docker_server"
+            class_name = "Dnp3DockerServer"
+
+        module: ModuleType = importlib.import_module(module_name)
+        server_class = getattr(module, class_name)
         server = server_class(ip="127.0.0.1", port=self._port)
         server_thread = threading.Thread(target=server.start, name=f"{self._protocol.capitalize()}Server", daemon=True)
         server_thread.start()
