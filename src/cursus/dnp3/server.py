@@ -44,10 +44,10 @@ def _create_channel_listener(asiodnp3: ModuleType, logger: "CustomLogger") -> ob
 def _create_command_handler(opendnp3: ModuleType) -> object:
     class CommandHandler(opendnp3.ICommandHandler):
         def Start(self) -> None:  # noqa: N802
-            return
+            pass
 
         def End(self) -> None:  # noqa: N802
-            return
+            pass
 
         def Select(self, _command: object, _index: int) -> object:  # noqa: N802
             return opendnp3.CommandStatus.SUCCESS
@@ -128,7 +128,7 @@ class Dnp3Server:
         builder.Update(self._opendnp3.Binary(value), index)
         self._outstation.Apply(builder.Build())
 
-    def update_analog_input(self, index: int, value: float) -> None:
+    def update_analog_input(self, index: int, *, value: float) -> None:
         """Update an analog input point in the outstation database."""
         builder = self._asiodnp3.UpdateBuilder()
         builder.Update(self._opendnp3.Analog(value), index)
@@ -139,4 +139,3 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     server = Dnp3Server(ip="127.0.0.1", port=20000)
     server.start()
-
