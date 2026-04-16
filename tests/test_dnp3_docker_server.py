@@ -21,9 +21,13 @@ def test_start_uses_docker_compose(monkeypatch: pytest.MonkeyPatch) -> None:
     server = Dnp3DockerServer(
         ip="0.0.0.0",
         port=21000,
-        config=Dnp3OutstationConfig(database_size=12, event_buffer_size=14, local_addr=22, remote_addr=33),
+        config=Dnp3OutstationConfig(
+            database_size=12, event_buffer_size=14, local_addr=22, remote_addr=33
+        ),
     )
-    monkeypatch.setattr(server, "_compose_file", lambda: Path("/tmp/docker-compose.dnp3.yml"))
+    monkeypatch.setattr(
+        server, "_compose_file", lambda: Path("/tmp/docker-compose.dnp3.yml")
+    )
 
     process = Mock()
     popen = Mock(return_value=process)
@@ -33,7 +37,14 @@ def test_start_uses_docker_compose(monkeypatch: pytest.MonkeyPatch) -> None:
 
     command = popen.call_args.args[0]
     env = popen.call_args.kwargs["env"]
-    assert command == ["docker", "compose", "-f", "/tmp/docker-compose.dnp3.yml", "up", "--build"]
+    assert command == [
+        "docker",
+        "compose",
+        "-f",
+        "/tmp/docker-compose.dnp3.yml",
+        "up",
+        "--build",
+    ]
     assert env["DNP3_HOST"] == "0.0.0.0"
     assert env["DNP3_PORT"] == "21000"
     assert env["DNP3_DATABASE_SIZE"] == "12"
