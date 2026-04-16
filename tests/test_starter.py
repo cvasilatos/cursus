@@ -103,6 +103,38 @@ class TestStarter:
         mock_thread_instance.start.assert_called_once()
         mock_sleep.assert_called_once_with(2)
 
+    @patch("cursus.starter.importlib.import_module")
+    @patch("cursus.starter.time.sleep")
+    @patch("cursus.starter.threading.Thread")
+    def test_start_server_dnp3(
+        self,
+        mock_thread: Mock,
+        mock_sleep: Mock,
+        mock_import: Mock,
+    ) -> None:
+        """Test starting a DNP3 server."""
+        mock_module = MagicMock()
+        mock_server_class = MagicMock()
+        mock_server_instance = MagicMock()
+        mock_thread_instance = MagicMock()
+
+        mock_import.return_value = mock_module
+        mock_module.Dnp3Server = mock_server_class
+        mock_server_class.return_value = mock_server_instance
+        mock_thread.return_value = mock_thread_instance
+
+        starter = Starter(protocol="dnp3", port=20000, delay=2)
+        starter.start_server()
+
+        mock_import.assert_called_once_with("cursus.dnp3.server")
+        mock_server_class.assert_called_once_with(ip="127.0.0.1", port=20000)
+        call_kwargs = mock_thread.call_args[1]
+        assert call_kwargs["target"] == mock_server_instance.start
+        assert call_kwargs["name"] == "Dnp3Server"
+        assert call_kwargs["daemon"] is True
+        mock_thread_instance.start.assert_called_once()
+        mock_sleep.assert_called_once_with(2)
+
     @pytest.mark.parametrize("delay_value", [1, 2, 5])
     @patch("cursus.starter.importlib.import_module")
     @patch("cursus.starter.time.sleep")

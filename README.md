@@ -1,6 +1,6 @@
 # CursusD (Cursus Daemon)
 
-A Python server daemon for Industrial Control System (ICS) protocols. CursusD provides implementations for **Modbus TCP** and **S7comm** protocols, enabling simulation of industrial controllers for testing, development, security research, and training environments.
+A Python server daemon for Industrial Control System (ICS) protocols. CursusD provides implementations for **Modbus TCP**, **S7comm**, and **DNP3 outstation** protocols, enabling simulation of industrial controllers for testing, development, security research, and training environments.
 
 ## Features
 
@@ -13,6 +13,11 @@ A Python server daemon for Industrial Control System (ICS) protocols. CursusD pr
   - Supports multiple S7 data areas (DB, PA, PE, MK, TM, CT)
   - Configurable memory sizes
   - Compatible with standard S7 clients
+
+- **DNP3 Outstation Server**: DNP3 outstation emulator using pydnp3
+  - TCP server mode for DNP3 master connectivity
+  - Configurable DNP3 addresses and database sizes
+  - Binary and analog point update helpers
 
 - **Starter Class**: Convenient server management
   - Dynamic protocol server initialization
@@ -84,6 +89,22 @@ Or run directly from command line:
 python -m cursus.s7comm.server
 ```
 
+#### DNP3 Outstation Server
+
+```python
+from cursus.dnp3.server import Dnp3Server
+
+# Create and start a DNP3 outstation
+server = Dnp3Server(ip="127.0.0.1", port=20000)
+server.start()  # Blocks and runs until interrupted
+```
+
+Or run directly from command line:
+
+```bash
+python -m cursus.dnp3.server
+```
+
 ### Using the Starter Class
 
 The Starter class provides a convenient way to initialize and start protocol servers in daemon threads:
@@ -98,6 +119,10 @@ mbtcp_starter.start_server()
 # Start an S7comm server
 s7comm_starter = Starter(protocol="s7comm", port=102, delay=2)
 s7comm_starter.start_server()
+
+# Start a DNP3 outstation server
+dnp3_starter = Starter(protocol="dnp3", port=20000, delay=2)
+dnp3_starter.start_server()
 ```
 
 ## Development
@@ -181,7 +206,7 @@ Starter(protocol: str, port: int, delay: int)
 
 **Parameters:**
 
-- `protocol`: Protocol name ("mbtcp" or "s7comm")
+- `protocol`: Protocol name ("mbtcp", "s7comm", or "dnp3")
 - `port`: Port number for the server
 - `delay`: Delay in seconds after starting the server
 
