@@ -63,7 +63,8 @@ class Dnp3Server:
 
     def __init__(self, ip: str, port: int, config: Dnp3OutstationConfig | None = None) -> None:
         """Initialize the DNP3 outstation server."""
-        self.logger: CustomLogger = cast("CustomLogger", logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}"))
+        logger_name = f"{self.__class__.__module__}.{self.__class__.__name__}"
+        self.logger: CustomLogger = cast("CustomLogger", logging.getLogger(logger_name))
         self._ip: str = ip
         self._port: int = port
         self._config: Dnp3OutstationConfig = config or Dnp3OutstationConfig()
@@ -102,6 +103,10 @@ class Dnp3Server:
 
     def start(self) -> None:
         """Start the DNP3 outstation and keep it running."""
+        if self._running:
+            self.logger.warning("DNP3 outstation is already running")
+            return
+
         self.logger.info(f"Starting DNP3 outstation at {self._ip}:{self._port}")
         self._running = True
         self._outstation.Enable()

@@ -123,7 +123,7 @@ class TestStarter:
         mock_server_class.return_value = mock_server_instance
         mock_thread.return_value = mock_thread_instance
 
-        starter = Starter(protocol="dnp3", port=20000, delay=1)
+        starter = Starter(protocol="dnp3", port=20000, delay=2)
         starter.start_server()
 
         mock_import.assert_called_once_with("cursus.dnp3.server")
@@ -133,7 +133,7 @@ class TestStarter:
         assert call_kwargs["name"] == "Dnp3Server"
         assert call_kwargs["daemon"] is True
         mock_thread_instance.start.assert_called_once()
-        mock_sleep.assert_called_once_with(1)
+        mock_sleep.assert_called_once_with(2)
 
     @pytest.mark.parametrize("delay_value", [1, 2, 5])
     @patch("cursus.starter.importlib.import_module")
