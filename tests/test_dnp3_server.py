@@ -71,7 +71,7 @@ class _FakeManager:
 
 class _FakeDefaultOutstationApplication:
     @staticmethod
-    def Instance():  # noqa: N802
+    def Create():  # noqa: N802
         return "default-outstation-app"
 
 
@@ -95,7 +95,6 @@ def _build_fake_modules():
         ConsoleLogger=_FakeConsoleLogger,
         DNP3Manager=manager_factory,
         OutstationStackConfig=lambda _db: config,
-        DefaultOutstationApplication=_FakeDefaultOutstationApplication,
         UpdateBuilder=_FakeUpdateBuilder,
     )
     asiopal = SimpleNamespace(ChannelRetry=_FakeRetry)
@@ -107,6 +106,7 @@ def _build_fake_modules():
             AllTypes=lambda size: f"event-{size}",
         ),
         levels=SimpleNamespace(NORMAL=1, ALL_COMMS=2),
+        DefaultOutstationApplication=_FakeDefaultOutstationApplication,
         Binary=lambda value: ("Binary", value),
         Analog=lambda value: ("Analog", value),
     )

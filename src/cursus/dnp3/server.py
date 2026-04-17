@@ -101,7 +101,7 @@ class Dnp3Server:
         self._outstation = self._channel.AddOutstation(
             "cursus-outstation",
             self._command_handler,
-            asiodnp3.DefaultOutstationApplication.Instance(),
+            opendnp3.DefaultOutstationApplication.Create(),
             self._stack_config,
         )
 
