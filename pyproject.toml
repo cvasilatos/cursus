@@ -7,6 +7,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cursus"]
+include = ["src/cursus/dnp3/assets/**"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/cursus/dnp3/assets/**"]
 
 [project]
 name = "cursus"
