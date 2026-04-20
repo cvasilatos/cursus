@@ -23,6 +23,7 @@ A Python server daemon for Industrial Control System (ICS) protocols. CursusD pr
   - Dynamic protocol server initialization
   - Thread-based server execution
   - Configurable startup delays
+  - Ready signal emitted when the endpoint becomes reachable
 
 ## Installation
 
@@ -119,8 +120,11 @@ s7comm_starter.start_server()
 # Start a DNP3 outstation server
 dnp3_starter = Starter(protocol="dnp3", port=20000, delay=2)
 dnp3_starter.start_server()
+dnp3_starter.wait_until_ready(timeout=30)
 dnp3_starter.stop_server()
 ```
+
+`Starter.ready_event` is set when the server endpoint is reachable over TCP. This provides a protocol-neutral readiness signal for projects using Cursus, including `dnp3` when it is started through Docker and needs extra time before accepting connections.
 
 ## Development
 
@@ -199,6 +203,11 @@ Starter(protocol: str, port: int, delay: int)
 - `protocol`: Protocol name ("mbtcp", "s7comm", or "dnp3")
 - `port`: Port number for the server
 - `delay`: Delay in seconds after starting the server
+
+**Readiness:**
+
+- `ready_event`: `threading.Event` set once the server endpoint accepts TCP connections
+- `wait_until_ready(timeout: float | None = None) -> bool`: wait for the ready signal
 
 ## License
 

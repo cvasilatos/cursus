@@ -18,6 +18,7 @@ class TestStarter:
         assert starter._delay == 1
         assert starter._server is None
         assert starter._server_thread is None
+        assert starter.ready_event.is_set() is False
 
     def test_initialization_different_protocol(self) -> None:
         """Test that Starter initializes with s7comm protocol."""
@@ -41,29 +42,36 @@ class TestStarter:
         mock_server_class = MagicMock()
         mock_server_instance = MagicMock()
         mock_thread_instance = MagicMock()
+        mock_ready_thread = MagicMock()
 
         mock_import.return_value = mock_module
         mock_module.MbtcpServer = mock_server_class
         mock_server_class.return_value = mock_server_instance
-        mock_thread.return_value = mock_thread_instance
+        mock_thread.side_effect = [mock_thread_instance, mock_ready_thread]
 
         starter = Starter(protocol="mbtcp", port=5020, delay=1)
         starter.start_server()
 
         mock_import.assert_called_once_with("cursus.mbtcp.server")
         mock_server_class.assert_called_once_with(ip="127.0.0.1", port=5020)
-        mock_thread.assert_called_once()
+        assert mock_thread.call_count == 2
 
         # Check thread creation parameters
-        call_kwargs = mock_thread.call_args[1]
+        call_kwargs = mock_thread.call_args_list[0][1]
         assert call_kwargs["target"] == mock_server_instance.start
         assert call_kwargs["name"] == "MbtcpServer"
         assert call_kwargs["daemon"] is True
+        ready_call_kwargs = mock_thread.call_args_list[1][1]
+        assert ready_call_kwargs["target"] == starter._monitor_server_readiness
+        assert ready_call_kwargs["name"] == "MbtcpServerReadyMonitor"
+        assert ready_call_kwargs["daemon"] is True
 
         mock_thread_instance.start.assert_called_once()
+        mock_ready_thread.start.assert_called_once()
         mock_sleep.assert_called_once_with(1)
         assert starter._server == mock_server_instance
         assert starter._server_thread == mock_thread_instance
+        assert starter._ready_monitor_thread == mock_ready_thread
 
     @patch("cursus.starter.importlib.import_module")
     @patch("cursus.starter.time.sleep")
@@ -79,29 +87,36 @@ class TestStarter:
         mock_server_class = MagicMock()
         mock_server_instance = MagicMock()
         mock_thread_instance = MagicMock()
+        mock_ready_thread = MagicMock()
 
         mock_import.return_value = mock_module
         mock_module.S7commServer = mock_server_class
         mock_server_class.return_value = mock_server_instance
-        mock_thread.return_value = mock_thread_instance
+        mock_thread.side_effect = [mock_thread_instance, mock_ready_thread]
 
         starter = Starter(protocol="s7comm", port=5102, delay=2)
         starter.start_server()
 
         mock_import.assert_called_once_with("cursus.s7comm.server")
         mock_server_class.assert_called_once_with(ip="127.0.0.1", port=5102)
-        mock_thread.assert_called_once()
+        assert mock_thread.call_count == 2
 
         # Check thread creation parameters
-        call_kwargs = mock_thread.call_args[1]
+        call_kwargs = mock_thread.call_args_list[0][1]
         assert call_kwargs["target"] == mock_server_instance.start
         assert call_kwargs["name"] == "S7commServer"
         assert call_kwargs["daemon"] is True
+        ready_call_kwargs = mock_thread.call_args_list[1][1]
+        assert ready_call_kwargs["target"] == starter._monitor_server_readiness
+        assert ready_call_kwargs["name"] == "S7commServerReadyMonitor"
+        assert ready_call_kwargs["daemon"] is True
 
         mock_thread_instance.start.assert_called_once()
+        mock_ready_thread.start.assert_called_once()
         mock_sleep.assert_called_once_with(2)
         assert starter._server == mock_server_instance
         assert starter._server_thread == mock_thread_instance
+        assert starter._ready_monitor_thread == mock_ready_thread
 
     @patch("cursus.starter.importlib.import_module")
     @patch("cursus.starter.time.sleep")
@@ -117,25 +132,33 @@ class TestStarter:
         mock_server_class = MagicMock()
         mock_server_instance = MagicMock()
         mock_thread_instance = MagicMock()
+        mock_ready_thread = MagicMock()
 
         mock_import.return_value = mock_module
         mock_module.Dnp3Server = mock_server_class
         mock_server_class.return_value = mock_server_instance
-        mock_thread.return_value = mock_thread_instance
+        mock_thread.side_effect = [mock_thread_instance, mock_ready_thread]
 
         starter = Starter(protocol="dnp3", port=20000, delay=2)
         starter.start_server()
 
         mock_import.assert_called_once_with("cursus.dnp3.server")
         mock_server_class.assert_called_once_with(ip="127.0.0.1", port=20000)
-        call_kwargs = mock_thread.call_args[1]
+        assert mock_thread.call_count == 2
+        call_kwargs = mock_thread.call_args_list[0][1]
         assert call_kwargs["target"] == mock_server_instance.start
         assert call_kwargs["name"] == "Dnp3Server"
         assert call_kwargs["daemon"] is True
+        ready_call_kwargs = mock_thread.call_args_list[1][1]
+        assert ready_call_kwargs["target"] == starter._monitor_server_readiness
+        assert ready_call_kwargs["name"] == "Dnp3ServerReadyMonitor"
+        assert ready_call_kwargs["daemon"] is True
         mock_thread_instance.start.assert_called_once()
+        mock_ready_thread.start.assert_called_once()
         mock_sleep.assert_called_once_with(2)
         assert starter._server == mock_server_instance
         assert starter._server_thread == mock_thread_instance
+        assert starter._ready_monitor_thread == mock_ready_thread
 
     @pytest.mark.parametrize("delay_value", [1, 2, 5])
     @patch("cursus.starter.importlib.import_module")
@@ -153,11 +176,12 @@ class TestStarter:
         mock_server_class = MagicMock()
         mock_server_instance = MagicMock()
         mock_thread_instance = MagicMock()
+        mock_ready_thread = MagicMock()
 
         mock_import.return_value = mock_module
         mock_module.MbtcpServer = mock_server_class
         mock_server_class.return_value = mock_server_instance
-        mock_thread.return_value = mock_thread_instance
+        mock_thread.side_effect = [mock_thread_instance, mock_ready_thread]
 
         starter = Starter(protocol="mbtcp", port=5020, delay=delay_value)
         starter.start_server()
@@ -177,6 +201,7 @@ class TestStarter:
 
         mock_server.stop.assert_called_once_with()
         mock_thread.join.assert_called_once_with(timeout=3)
+        assert starter.ready_event.is_set() is False
 
     def test_stop_server_warns_when_stop_not_supported(self) -> None:
         """Test stopping a server without a stop() implementation."""
@@ -194,3 +219,27 @@ class TestStarter:
 
         with pytest.raises(ModuleNotFoundError):
             starter.start_server()
+
+    def test_wait_until_ready_returns_event_state(self) -> None:
+        """Test waiting on the ready event."""
+        starter = Starter(protocol="mbtcp", port=5020, delay=1)
+
+        starter.ready_event.set()
+
+        assert starter.wait_until_ready(timeout=0.1) is True
+
+    @patch("cursus.starter.time.sleep")
+    def test_monitor_server_readiness_sets_ready_event(
+        self,
+        mock_sleep: Mock,
+    ) -> None:
+        """Test that the readiness monitor emits the ready signal."""
+        starter = Starter(protocol="mbtcp", port=5020, delay=1)
+        starter._server_thread = Mock()
+        starter._server_thread.is_alive.side_effect = [True, True]
+
+        with patch.object(starter, "_is_server_ready", side_effect=[False, True]):
+            starter._monitor_server_readiness()
+
+        assert starter.ready_event.is_set() is True
+        mock_sleep.assert_called_once_with(0.1)

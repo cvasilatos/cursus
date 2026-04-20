@@ -1,5 +1,6 @@
 import importlib
 import logging
+import socket
 import threading
 import time
 from typing import TYPE_CHECKING, Any, cast
@@ -29,13 +30,22 @@ class Starter:
         self._delay: int = delay
         self._server: Any | None = None
         self._server_thread: threading.Thread | None = None
+        self._ready_event = threading.Event()
+        self._ready_monitor_thread: threading.Thread | None = None
+
+    @property
+    def ready_event(self) -> threading.Event:
+        """Event set when the server endpoint is ready to accept connections."""
+        return self._ready_event
 
     def start_server(self) -> threading.Thread:
         """Start the specified protocol server after a delay.
 
         Dynamically imports the server module based on the protocol name,
-        creates a server instance, and starts it in a daemon thread. After
-        starting the server, it waits for the configured delay period.
+        creates a server instance, and starts it in a daemon thread. A second
+        daemon thread probes the configured endpoint and sets `ready_event`
+        once the server is reachable. After starting the server, this method
+        still waits for the configured delay period for backwards compatibility.
 
         """
         protocol = self._protocol.lower()
@@ -45,12 +55,18 @@ class Starter:
         server_class = getattr(module, class_name)
         server = server_class(ip="127.0.0.1", port=self._port)
         self._server = server
+        self._ready_event.clear()
         server_thread = threading.Thread(target=server.start, name=class_name, daemon=True)
         self._server_thread = server_thread
         server_thread.start()
+        self._start_ready_monitor(class_name)
         self.logger.info(f"[+] Started {self._protocol} server on port {self._port}")
         time.sleep(self._delay)
         return server_thread
+
+    def wait_until_ready(self, timeout: float | None = None) -> bool:
+        """Block until the server endpoint is ready or the timeout elapses."""
+        return self._ready_event.wait(timeout=timeout)
 
     def stop_server(self) -> None:
         """Stop the running protocol server when the backend supports it."""
@@ -68,5 +84,36 @@ class Starter:
             if self._server_thread is not None and self._server_thread.is_alive():
                 self._server_thread.join(timeout=self._delay + 1)
         finally:
+            self._ready_event.clear()
             self._server = None
             self._server_thread = None
+            self._ready_monitor_thread = None
+
+    def _start_ready_monitor(self, class_name: str) -> None:
+        """Start a background probe that marks the server as ready."""
+        ready_monitor = threading.Thread(
+            target=self._monitor_server_readiness,
+            name=f"{class_name}ReadyMonitor",
+            daemon=True,
+        )
+        self._ready_monitor_thread = ready_monitor
+        ready_monitor.start()
+
+    def _monitor_server_readiness(self) -> None:
+        """Poll the server endpoint until it becomes reachable."""
+        while self._server_thread is not None and self._server_thread.is_alive():
+            if self._is_server_ready():
+                if not self._ready_event.is_set():
+                    self.logger.info(f"[+] {self._protocol} server is ready on port {self._port}")
+                    self._ready_event.set()
+                return
+
+            time.sleep(0.1)
+
+    def _is_server_ready(self) -> bool:
+        """Return whether the server endpoint is reachable over TCP."""
+        try:
+            with socket.create_connection(("127.0.0.1", self._port), timeout=0.1):
+                return True
+        except OSError:
+            return False
