@@ -12,7 +12,7 @@ packages = ["src/cursus"]
 name = "cursus"
 version = "0.2.0"
 description = "The server for ICS protocols"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
     "pymodbus>=3.12.0",
     "python-snap7>=1.3,<3.0",
