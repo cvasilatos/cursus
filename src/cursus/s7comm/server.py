@@ -17,10 +17,10 @@ class S7commServer:
         Args:
             ip: The IP address to bind the server to (e.g., "127.0.0.1" or "0.0.0.0").
             port: The TCP port number to listen on (default S7comm port is 102).
-            size: The size of the memory areas in bytes. Defaults to 32000.
-                  This size applies to all S7 data areas: Data Block (DB1), Process
-                  Outputs (PA), Process Inputs (PE), Merkers memory (MK), Timers (TM),
-                  and Counters (CT).
+            size: The size of the memory areas in bytes. Defaults to 1024.
+                  This size applies to Process Outputs (PA), Process Inputs (PE),
+                  Merkers memory (MK), Timers (TM), and Counters (CT). DB1 uses
+                  a fixed 64-byte area.
 
         """
         self.logger: CustomLogger = cast("CustomLogger", logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}"))

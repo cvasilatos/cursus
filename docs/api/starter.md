@@ -1,1 +1,1 @@
-::: starter
+::: cursus.starter
