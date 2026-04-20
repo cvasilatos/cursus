@@ -19,18 +19,24 @@ class Dnp3OutstationConfig:
     remote_addr: int = 1
 
 
-def _import_pydnp3() -> tuple[ModuleType, ModuleType, ModuleType]:
+def _require_pydnp3() -> tuple[ModuleType, ModuleType, ModuleType]:
     try:
-        pydnp3_module = importlib.import_module("pydnp3")
+        package = importlib.import_module("pydnp3")
     except ModuleNotFoundError as exc:
-        msg = "DNP3 support requires 'pydnp3'. Install it with: pip install pydnp3"
-        raise RuntimeError(msg) from exc
+        if exc.name != "pydnp3":
+            raise
+        message = "pydnp3 is required to use cursus.dnp3.server"
+        raise ModuleNotFoundError(message) from exc
 
-    return pydnp3_module.asiodnp3, pydnp3_module.asiopal, pydnp3_module.opendnp3
+    return (
+        cast("ModuleType", package.asiodnp3),
+        cast("ModuleType", package.asiopal),
+        cast("ModuleType", package.opendnp3),
+    )
 
 
-def _create_channel_listener(asiodnp3: ModuleType, logger: "CustomLogger") -> object:
-    class ChannelListener(asiodnp3.IChannelListener):
+def _create_channel_listener(asiodnp3_module: ModuleType, logger: "CustomLogger") -> object:
+    class ChannelListener(asiodnp3_module.IChannelListener):
         def __init__(self, log: "CustomLogger") -> None:
             super().__init__()
             self._logger = log
@@ -41,8 +47,8 @@ def _create_channel_listener(asiodnp3: ModuleType, logger: "CustomLogger") -> ob
     return ChannelListener(logger)
 
 
-def _create_command_handler(opendnp3: ModuleType) -> object:
-    class CommandHandler(opendnp3.ICommandHandler):
+def _create_command_handler(opendnp3_module: ModuleType) -> object:
+    class CommandHandler(opendnp3_module.ICommandHandler):
         def Start(self) -> None:  # noqa: N802
             pass
 
@@ -50,10 +56,10 @@ def _create_command_handler(opendnp3: ModuleType) -> object:
             pass
 
         def Select(self, _command: object, _index: int) -> object:  # noqa: N802
-            return opendnp3.CommandStatus.SUCCESS
+            return opendnp3_module.CommandStatus.SUCCESS
 
         def Operate(self, _command: object, _index: int, _op_type: object) -> object:  # noqa: N802
-            return opendnp3.CommandStatus.SUCCESS
+            return opendnp3_module.CommandStatus.SUCCESS
 
     return CommandHandler()
 
@@ -70,7 +76,7 @@ class Dnp3Server:
         self._config: Dnp3OutstationConfig = config or Dnp3OutstationConfig()
         self._running: bool = False
 
-        asiodnp3, asiopal, opendnp3 = _import_pydnp3()
+        asiodnp3, asiopal, opendnp3 = _require_pydnp3()
         self._asiodnp3 = asiodnp3
         self._opendnp3 = opendnp3
 

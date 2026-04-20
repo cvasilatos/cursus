@@ -37,23 +37,15 @@ class Starter:
         creates a server instance, and starts it in a daemon thread. After
         starting the server, it waits for the configured delay period.
 
-        Raises:
-            ModuleNotFoundError: If the protocol module cannot be found.
-            AttributeError: If the server class does not exist in the module.
-
         """
         protocol = self._protocol.lower()
         module_name = f"cursus.{protocol}.server"
-        class_name = f"{self._protocol.capitalize()}Server"
-        if protocol == "dnp3":
-            module_name = "cursus.dnp3.docker_server"
-            class_name = "Dnp3DockerServer"
-
+        class_name = f"{protocol.capitalize()}Server"
         module: ModuleType = importlib.import_module(module_name)
         server_class = getattr(module, class_name)
         server = server_class(ip="127.0.0.1", port=self._port)
         self._server = server
-        server_thread = threading.Thread(target=server.start, name=f"{self._protocol.capitalize()}Server", daemon=True)
+        server_thread = threading.Thread(target=server.start, name=class_name, daemon=True)
         self._server_thread = server_thread
         server_thread.start()
         self.logger.info(f"[+] Started {self._protocol} server on port {self._port}")

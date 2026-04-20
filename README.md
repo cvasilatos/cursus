@@ -53,27 +53,7 @@ pip install -e .
 pip install ruff pytest pytest-cov
 ```
 
-### DNP3 via Docker
-
-If you only need the DNP3 outstation, run it in Docker instead of installing `pydnp3` locally:
-
-```bash
-docker compose -f docker-compose.dnp3.yml up --build
-```
-
-This starts the DNP3 server on `0.0.0.0:20000` in a dedicated Python 3.10 container. You can override the bind address, port, and DNP3 settings with environment variables in [`docker-compose.dnp3.yml`](./docker-compose.dnp3.yml).
-
-From Python, use the Docker-backed launcher the same way you use the other servers:
-
-```python
-from cursus.dnp3.docker_server import Dnp3DockerServer
-
-server = Dnp3DockerServer(ip="127.0.0.1", port=20000)
-server.start()
-server.stop()  # Runs `docker compose down --remove-orphans`
-```
-
-`Starter(protocol="dnp3", ...)` also uses the Docker-backed launcher now.
+`Starter(protocol="dnp3", ...)` uses `cursus.dnp3.server.Dnp3Server` like the other protocols.
 
 ## Usage
 

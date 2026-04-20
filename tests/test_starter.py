@@ -37,7 +37,6 @@ class TestStarter:
         mock_import: Mock,
     ) -> None:
         """Test starting a Modbus TCP server."""
-        # Setup mocks
         mock_module = MagicMock()
         mock_server_class = MagicMock()
         mock_server_instance = MagicMock()
@@ -48,11 +47,9 @@ class TestStarter:
         mock_server_class.return_value = mock_server_instance
         mock_thread.return_value = mock_thread_instance
 
-        # Create starter and start server
         starter = Starter(protocol="mbtcp", port=5020, delay=1)
         starter.start_server()
 
-        # Verify behavior
         mock_import.assert_called_once_with("cursus.mbtcp.server")
         mock_server_class.assert_called_once_with(ip="127.0.0.1", port=5020)
         mock_thread.assert_called_once()
@@ -78,7 +75,6 @@ class TestStarter:
         mock_import: Mock,
     ) -> None:
         """Test starting an S7comm server."""
-        # Setup mocks
         mock_module = MagicMock()
         mock_server_class = MagicMock()
         mock_server_instance = MagicMock()
@@ -89,11 +85,9 @@ class TestStarter:
         mock_server_class.return_value = mock_server_instance
         mock_thread.return_value = mock_thread_instance
 
-        # Create starter and start server
         starter = Starter(protocol="s7comm", port=5102, delay=2)
         starter.start_server()
 
-        # Verify behavior
         mock_import.assert_called_once_with("cursus.s7comm.server")
         mock_server_class.assert_called_once_with(ip="127.0.0.1", port=5102)
         mock_thread.assert_called_once()
@@ -125,14 +119,14 @@ class TestStarter:
         mock_thread_instance = MagicMock()
 
         mock_import.return_value = mock_module
-        mock_module.Dnp3DockerServer = mock_server_class
+        mock_module.Dnp3Server = mock_server_class
         mock_server_class.return_value = mock_server_instance
         mock_thread.return_value = mock_thread_instance
 
         starter = Starter(protocol="dnp3", port=20000, delay=2)
         starter.start_server()
 
-        mock_import.assert_called_once_with("cursus.dnp3.docker_server")
+        mock_import.assert_called_once_with("cursus.dnp3.server")
         mock_server_class.assert_called_once_with(ip="127.0.0.1", port=20000)
         call_kwargs = mock_thread.call_args[1]
         assert call_kwargs["target"] == mock_server_instance.start
@@ -155,7 +149,6 @@ class TestStarter:
         delay_value: int,
     ) -> None:
         """Test that various delay values are properly applied."""
-        # Setup mocks
         mock_module = MagicMock()
         mock_server_class = MagicMock()
         mock_server_instance = MagicMock()
@@ -168,6 +161,7 @@ class TestStarter:
 
         starter = Starter(protocol="mbtcp", port=5020, delay=delay_value)
         starter.start_server()
+
         mock_sleep.assert_called_once_with(delay_value)
 
     def test_stop_server_calls_backing_stop(self) -> None:
@@ -193,3 +187,10 @@ class TestStarter:
             starter.stop_server()
 
         mock_warning.assert_called_once_with("mbtcp server does not support stop()")
+
+    def test_start_server_rejects_unknown_protocol(self) -> None:
+        """Test that unsupported protocols fail when the module does not exist."""
+        starter = Starter(protocol="opcua", port=4840, delay=1)
+
+        with pytest.raises(ModuleNotFoundError):
+            starter.start_server()

@@ -117,7 +117,7 @@ def _build_fake_modules():
 def test_initialization(monkeypatch: pytest.MonkeyPatch) -> None:
     asiodnp3, asiopal, opendnp3, managers, config = _build_fake_modules()
     monkeypatch.setattr(
-        "cursus.dnp3.server._import_pydnp3",
+        "cursus.dnp3.server._require_pydnp3",
         lambda: (asiodnp3, asiopal, opendnp3),
     )
 
@@ -136,7 +136,7 @@ def test_initialization(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_start_and_stop(monkeypatch: pytest.MonkeyPatch) -> None:
     asiodnp3, asiopal, opendnp3, managers, _config = _build_fake_modules()
     monkeypatch.setattr(
-        "cursus.dnp3.server._import_pydnp3",
+        "cursus.dnp3.server._require_pydnp3",
         lambda: (asiodnp3, asiopal, opendnp3),
     )
 
@@ -159,7 +159,7 @@ def test_start_and_stop(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_point_updates(monkeypatch: pytest.MonkeyPatch) -> None:
     asiodnp3, asiopal, opendnp3, managers, _config = _build_fake_modules()
     monkeypatch.setattr(
-        "cursus.dnp3.server._import_pydnp3",
+        "cursus.dnp3.server._require_pydnp3",
         lambda: (asiodnp3, asiopal, opendnp3),
     )
 
