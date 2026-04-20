@@ -18,6 +18,7 @@ A Python server daemon for Industrial Control System (ICS) protocols. CursusD pr
   - TCP server mode for DNP3 master connectivity
   - Configurable DNP3 addresses and database sizes
   - Binary and analog point update helpers
+  - Docker-backed starter flow so the host environment does not need `pydnp3`
 
 - **Starter Class**: Convenient server management
   - Dynamic protocol server initialization
@@ -54,7 +55,7 @@ pip install -e .
 pip install ruff pytest pytest-cov
 ```
 
-`Starter(protocol="dnp3", ...)` uses `cursus.dnp3.server.Dnp3Server` like the other protocols.
+`Starter(protocol="dnp3", ...)` uses Docker Compose to run the bundled DNP3 image. `cursus.dnp3.server.Dnp3Server` remains available for direct use inside environments where `pydnp3` is installed.
 
 ## Usage
 
@@ -125,6 +126,8 @@ dnp3_starter.stop_server()
 ```
 
 `Starter.ready_event` is set when the server endpoint is reachable over TCP. This provides a protocol-neutral readiness signal for projects using Cursus, including `dnp3` when it is started through Docker and needs extra time before accepting connections.
+
+For `dnp3`, Docker and the Docker Compose plugin must be installed on the machine running the starter.
 
 ## Development
 

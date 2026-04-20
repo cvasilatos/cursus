@@ -1,15 +1,15 @@
 services:
   dnp3:
     build:
-      context: .
-      dockerfile: docker/dnp3/Dockerfile
+      context: ../../../..
+      dockerfile: src/cursus/dnp3/assets/Dockerfile
     ports:
-      - "20000:20000"
+      - "${DNP3_PORT:-20000}:${DNP3_PORT:-20000}"
     environment:
-      DNP3_HOST: 0.0.0.0
-      DNP3_PORT: 20000
-      DNP3_LOCAL_ADDR: 10
-      DNP3_REMOTE_ADDR: 1
-      DNP3_DATABASE_SIZE: 10
-      DNP3_EVENT_BUFFER_SIZE: 10
-      LOG_LEVEL: INFO
+      DNP3_HOST: ${DNP3_HOST:-0.0.0.0}
+      DNP3_PORT: ${DNP3_PORT:-20000}
+      DNP3_LOCAL_ADDR: ${DNP3_LOCAL_ADDR:-10}
+      DNP3_REMOTE_ADDR: ${DNP3_REMOTE_ADDR:-1}
+      DNP3_DATABASE_SIZE: ${DNP3_DATABASE_SIZE:-10}
+      DNP3_EVENT_BUFFER_SIZE: ${DNP3_EVENT_BUFFER_SIZE:-10}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}

@@ -135,23 +135,23 @@ class TestStarter:
         mock_ready_thread = MagicMock()
 
         mock_import.return_value = mock_module
-        mock_module.Dnp3Server = mock_server_class
+        mock_module.Dnp3DockerServer = mock_server_class
         mock_server_class.return_value = mock_server_instance
         mock_thread.side_effect = [mock_thread_instance, mock_ready_thread]
 
         starter = Starter(protocol="dnp3", port=20000, delay=2)
         starter.start_server()
 
-        mock_import.assert_called_once_with("cursus.dnp3.server")
+        mock_import.assert_called_once_with("cursus.dnp3.docker_server")
         mock_server_class.assert_called_once_with(ip="127.0.0.1", port=20000)
         assert mock_thread.call_count == 2
         call_kwargs = mock_thread.call_args_list[0][1]
         assert call_kwargs["target"] == mock_server_instance.start
-        assert call_kwargs["name"] == "Dnp3Server"
+        assert call_kwargs["name"] == "Dnp3DockerServer"
         assert call_kwargs["daemon"] is True
         ready_call_kwargs = mock_thread.call_args_list[1][1]
         assert ready_call_kwargs["target"] == starter._monitor_server_readiness
-        assert ready_call_kwargs["name"] == "Dnp3ServerReadyMonitor"
+        assert ready_call_kwargs["name"] == "Dnp3DockerServerReadyMonitor"
         assert ready_call_kwargs["daemon"] is True
         mock_thread_instance.start.assert_called_once()
         mock_ready_thread.start.assert_called_once()

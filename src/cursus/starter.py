@@ -11,6 +11,13 @@ if TYPE_CHECKING:
     from decima.logger import CustomLogger
 
 
+_SERVER_IMPORTS: dict[str, tuple[str, str]] = {
+    "mbtcp": ("cursus.mbtcp.server", "MbtcpServer"),
+    "s7comm": ("cursus.s7comm.server", "S7commServer"),
+    "dnp3": ("cursus.dnp3.docker_server", "Dnp3DockerServer"),
+}
+
+
 class Starter:
     """Starter class to initialize and start protocol servers."""
 
@@ -49,8 +56,10 @@ class Starter:
 
         """
         protocol = self._protocol.lower()
-        module_name = f"cursus.{protocol}.server"
-        class_name = f"{protocol.capitalize()}Server"
+        module_name, class_name = _SERVER_IMPORTS.get(
+            protocol,
+            (f"cursus.{protocol}.server", f"{protocol.capitalize()}Server"),
+        )
         module: ModuleType = importlib.import_module(module_name)
         server_class = getattr(module, class_name)
         server = server_class(ip="127.0.0.1", port=self._port)
