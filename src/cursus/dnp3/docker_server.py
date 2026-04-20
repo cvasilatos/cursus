@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 import tempfile
+import threading
 from importlib import resources
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -23,6 +24,9 @@ class Dnp3DockerServer:
         self._config = config or Dnp3OutstationConfig()
         self._process: subprocess.Popen[str] | None = None
         self._workspace: tempfile.TemporaryDirectory[str] | None = None
+        self._workspace_root: Path | None = None
+        self._compose_file: Path | None = None
+        self._state_lock = threading.Lock()
 
     def _asset(self, relative_path: str) -> resources.abc.Traversable:
         asset = resources.files("cursus.dnp3").joinpath("assets", *relative_path.split("/"))
@@ -66,7 +70,8 @@ class Dnp3DockerServer:
             return
 
         self._workspace, workspace_root = self._build_workspace()
-        compose_file = workspace_root / "docker-compose.dnp3.yml"
+        self._workspace_root = workspace_root
+        self._compose_file = workspace_root / "docker-compose.dnp3.yml"
         env = os.environ.copy()
         env.update(
             {
@@ -79,26 +84,55 @@ class Dnp3DockerServer:
             },
         )
 
-        command = ["docker", "compose", "-f", str(compose_file), "up", "--build"]
+        command = ["docker", "compose", "-f", str(self._compose_file), "up", "--build"]
         self.logger.info(f"Starting DNP3 Docker server at {self._ip}:{self._port}")
         self._process = subprocess.Popen(command, cwd=workspace_root, env=env, text=True)  # noqa: S603
         try:
             self._process.wait()
         finally:
             self._process = None
-            if self._workspace is not None:
-                self._workspace.cleanup()
-                self._workspace = None
+            self._teardown_compose()
+            self._cleanup_workspace()
 
     def stop(self) -> None:
-        """Stop the running Docker Compose process."""
-        if self._process is None:
-            return
+        """Stop the running Docker Compose process and remove containers."""
+        process = self._process
+        if process is not None:
+            process.terminate()
+            try:
+                process.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=30)
+            finally:
+                self._process = None
 
-        self._process.terminate()
-        self._process.wait(timeout=30)
-        self._process = None
-        if self._workspace is not None:
+        self._teardown_compose()
+        self._cleanup_workspace()
+
+    def _teardown_compose(self) -> None:
+        with self._state_lock:
+            if self._workspace_root is None or self._compose_file is None:
+                return
+
+            command = [
+                "docker",
+                "compose",
+                "-f",
+                str(self._compose_file),
+                "down",
+                "--remove-orphans",
+            ]
+            self.logger.info("Stopping DNP3 Docker Compose stack")
+            subprocess.run(command, cwd=self._workspace_root, check=False, text=True)  # noqa: S603
+            self._compose_file = None
+            self._workspace_root = None
+
+    def _cleanup_workspace(self) -> None:
+        with self._state_lock:
+            if self._workspace is None:
+                return
+
             self._workspace.cleanup()
             self._workspace = None
 

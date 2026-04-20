@@ -2,7 +2,7 @@ import importlib
 import logging
 import threading
 import time
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -27,6 +27,8 @@ class Starter:
         self._protocol: str = protocol
         self._port: int = port
         self._delay: int = delay
+        self._server: Any | None = None
+        self._server_thread: threading.Thread | None = None
 
     def start_server(self) -> threading.Thread:
         """Start the specified protocol server after a delay.
@@ -50,8 +52,29 @@ class Starter:
         module: ModuleType = importlib.import_module(module_name)
         server_class = getattr(module, class_name)
         server = server_class(ip="127.0.0.1", port=self._port)
+        self._server = server
         server_thread = threading.Thread(target=server.start, name=f"{self._protocol.capitalize()}Server", daemon=True)
+        self._server_thread = server_thread
         server_thread.start()
         self.logger.info(f"[+] Started {self._protocol} server on port {self._port}")
         time.sleep(self._delay)
         return server_thread
+
+    def stop_server(self) -> None:
+        """Stop the running protocol server when the backend supports it."""
+        if self._server is None:
+            self.logger.warning(f"No {self._protocol} server is currently running")
+            return
+
+        stop = getattr(self._server, "stop", None)
+        if stop is None:
+            self.logger.warning(f"{self._protocol} server does not support stop()")
+            return
+
+        try:
+            stop()
+            if self._server_thread is not None and self._server_thread.is_alive():
+                self._server_thread.join(timeout=self._delay + 1)
+        finally:
+            self._server = None
+            self._server_thread = None

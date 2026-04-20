@@ -1,6 +1,7 @@
 """Tests for the Docker-backed DNP3 launcher."""
 
-from unittest.mock import Mock
+from pathlib import Path
+from unittest.mock import Mock, patch
 
 from cursus.dnp3.docker_server import Dnp3DockerServer
 from cursus.dnp3.server import Dnp3OutstationConfig
@@ -39,7 +40,9 @@ def test_start_uses_docker_compose(monkeypatch) -> None:
 
     process.wait.side_effect = wait
     popen = Mock(return_value=process)
+    run = Mock()
     monkeypatch.setattr("cursus.dnp3.docker_server.subprocess.Popen", popen)
+    monkeypatch.setattr("cursus.dnp3.docker_server.subprocess.run", run)
 
     server.start()
 
@@ -61,19 +64,56 @@ def test_start_uses_docker_compose(monkeypatch) -> None:
     assert env["DNP3_LOCAL_ADDR"] == "22"
     assert env["DNP3_REMOTE_ADDR"] == "33"
     process.wait.assert_called_once()
+    run.assert_called_once_with(
+        [
+            "docker",
+            "compose",
+            "-f",
+            str(popen.call_args.kwargs["cwd"] / "docker-compose.dnp3.yml"),
+            "down",
+            "--remove-orphans",
+        ],
+        cwd=popen.call_args.kwargs["cwd"],
+        check=False,
+        text=True,
+    )
+    assert server._workspace is None
+    assert server._workspace_root is None
+    assert server._compose_file is None
 
 
 def test_stop_terminates_running_process() -> None:
     server = Dnp3DockerServer(ip="127.0.0.1", port=20000)
     process = Mock()
     workspace = Mock()
+    workspace_root = Path("/tmp/cursus-dnp3-test")
+    compose_file = workspace_root / "docker-compose.dnp3.yml"
+    run = Mock()
     server._process = process
     server._workspace = workspace
+    server._workspace_root = workspace_root
+    server._compose_file = compose_file
 
-    server.stop()
+    with patch("cursus.dnp3.docker_server.subprocess.run", run):
+        server.stop()
 
     process.terminate.assert_called_once()
     process.wait.assert_called_once_with(timeout=30)
+    run.assert_called_once_with(
+        [
+            "docker",
+            "compose",
+            "-f",
+            str(compose_file),
+            "down",
+            "--remove-orphans",
+        ],
+        cwd=workspace_root,
+        check=False,
+        text=True,
+    )
     workspace.cleanup.assert_called_once()
     assert server._process is None
     assert server._workspace is None
+    assert server._workspace_root is None
+    assert server._compose_file is None

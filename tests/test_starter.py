@@ -16,6 +16,8 @@ class TestStarter:
         assert starter._protocol == "mbtcp"
         assert starter._port == 5020
         assert starter._delay == 1
+        assert starter._server is None
+        assert starter._server_thread is None
 
     def test_initialization_different_protocol(self) -> None:
         """Test that Starter initializes with s7comm protocol."""
@@ -63,6 +65,8 @@ class TestStarter:
 
         mock_thread_instance.start.assert_called_once()
         mock_sleep.assert_called_once_with(1)
+        assert starter._server == mock_server_instance
+        assert starter._server_thread == mock_thread_instance
 
     @patch("cursus.starter.importlib.import_module")
     @patch("cursus.starter.time.sleep")
@@ -102,6 +106,8 @@ class TestStarter:
 
         mock_thread_instance.start.assert_called_once()
         mock_sleep.assert_called_once_with(2)
+        assert starter._server == mock_server_instance
+        assert starter._server_thread == mock_thread_instance
 
     @patch("cursus.starter.importlib.import_module")
     @patch("cursus.starter.time.sleep")
@@ -134,6 +140,8 @@ class TestStarter:
         assert call_kwargs["daemon"] is True
         mock_thread_instance.start.assert_called_once()
         mock_sleep.assert_called_once_with(2)
+        assert starter._server == mock_server_instance
+        assert starter._server_thread == mock_thread_instance
 
     @pytest.mark.parametrize("delay_value", [1, 2, 5])
     @patch("cursus.starter.importlib.import_module")
@@ -161,3 +169,27 @@ class TestStarter:
         starter = Starter(protocol="mbtcp", port=5020, delay=delay_value)
         starter.start_server()
         mock_sleep.assert_called_once_with(delay_value)
+
+    def test_stop_server_calls_backing_stop(self) -> None:
+        """Test stopping a server when the backing implementation supports it."""
+        starter = Starter(protocol="dnp3", port=20000, delay=2)
+        mock_server = Mock()
+        mock_thread = Mock()
+        mock_thread.is_alive.return_value = True
+        starter._server = mock_server
+        starter._server_thread = mock_thread
+
+        starter.stop_server()
+
+        mock_server.stop.assert_called_once_with()
+        mock_thread.join.assert_called_once_with(timeout=3)
+
+    def test_stop_server_warns_when_stop_not_supported(self) -> None:
+        """Test stopping a server without a stop() implementation."""
+        starter = Starter(protocol="mbtcp", port=5020, delay=1)
+        starter._server = object()
+
+        with patch.object(starter.logger, "warning") as mock_warning:
+            starter.stop_server()
+
+        mock_warning.assert_called_once_with("mbtcp server does not support stop()")

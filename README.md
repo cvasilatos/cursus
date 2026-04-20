@@ -70,6 +70,7 @@ from cursus.dnp3.docker_server import Dnp3DockerServer
 
 server = Dnp3DockerServer(ip="127.0.0.1", port=20000)
 server.start()
+server.stop()  # Runs `docker compose down --remove-orphans`
 ```
 
 `Starter(protocol="dnp3", ...)` also uses the Docker-backed launcher now.
@@ -138,6 +139,7 @@ s7comm_starter.start_server()
 # Start a DNP3 outstation server
 dnp3_starter = Starter(protocol="dnp3", port=20000, delay=2)
 dnp3_starter.start_server()
+dnp3_starter.stop_server()
 ```
 
 ## Development
