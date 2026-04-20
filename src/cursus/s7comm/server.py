@@ -86,10 +86,3 @@ class S7commServer:
         self.logger.info(f"Stopping S7comm server at {self._ip}:{self._port}")
         self._stopped.set()
         self._server.stop()
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    server = S7commServer(ip="127.0.0.1", port=10200)
-
-    server.start()

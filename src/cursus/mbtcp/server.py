@@ -61,16 +61,15 @@ class MbtcpServer:
 
         """
         self.logger.info(f"Starting Modbus TCP server at {self._ip}:{self._port}")
-        loop = asyncio.new_event_loop()
-        self._loop = loop
+        self._loop = asyncio.new_event_loop()
 
         try:
-            asyncio.set_event_loop(loop)
-            self._server = loop.run_until_complete(self._create_server())
-            loop.run_until_complete(self._server.serve_forever())
+            asyncio.set_event_loop(self._loop)
+            self._server = self._loop.run_until_complete(self._create_server())
+            self._loop.run_until_complete(self._server.serve_forever())
         finally:
             asyncio.set_event_loop(None)
-            loop.close()
+            self._loop.close()
             self._server = None
             self._loop = None
 

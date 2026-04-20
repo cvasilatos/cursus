@@ -52,15 +52,7 @@ class Dnp3DockerServer:
         subprocess.run(self._compose_command(*args), check=True, env=self._compose_environment(), timeout=timeout)  # noqa: S603
 
     def _compose_command(self, *args: str) -> list[str]:
-        return [
-            "docker",
-            "compose",
-            "-p",
-            self._project_name,
-            "-f",
-            str(self._compose_file),
-            *args,
-        ]
+        return ["docker", "compose", "-p", self._project_name, "-f", str(self._compose_file), *args]
 
     def _compose_environment(self) -> dict[str, str]:
         env = os.environ.copy()
