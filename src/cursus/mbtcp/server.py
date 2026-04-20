@@ -66,9 +66,8 @@ class MbtcpServer:
 
         try:
             asyncio.set_event_loop(loop)
-            server = loop.run_until_complete(self._create_server())
-            self._server = server
-            loop.run_until_complete(server.serve_forever())
+            self._server = loop.run_until_complete(self._create_server())
+            loop.run_until_complete(self._server.serve_forever())
         finally:
             asyncio.set_event_loop(None)
             loop.close()
@@ -86,8 +85,4 @@ class MbtcpServer:
 
     async def _create_server(self) -> ModbusTcpServer:
         """Create the Modbus server while an event loop is active."""
-        return ModbusTcpServer(
-            context=self._context,
-            identity=self._identity,
-            address=(self._ip, self._port),
-        )
+        return ModbusTcpServer(context=self._context, identity=self._identity, address=(self._ip, self._port))

@@ -28,11 +28,13 @@ class Starter:
         self._protocol: str = protocol
         self._port: int = port
         self._delay: int = delay
+
         self._server: Any | None = None
         self._server_thread: threading.Thread | None = None
+        self._server_error: BaseException | None = None
+
         self._ready_event = threading.Event()
         self._ready_monitor_thread: threading.Thread | None = None
-        self._server_error: BaseException | None = None
 
     @property
     def ready_event(self) -> threading.Event:
@@ -53,9 +55,10 @@ class Starter:
         module_name, class_name = f"cursus.{protocol}.server", f"{protocol.capitalize()}Server"
         module: ModuleType = importlib.import_module(module_name)
         server_class = getattr(module, class_name)
-        server = server_class(ip="127.0.0.1", port=self._port)
-        self._server = server
+        self._server = server_class(ip="127.0.0.1", port=self._port)
+
         self._ready_event.clear()
+
         self._server_error = None
         server_thread = threading.Thread(target=self._run_server, name=class_name, daemon=True)
         self._server_thread = server_thread
@@ -109,11 +112,7 @@ class Starter:
 
     def _start_ready_monitor(self, class_name: str) -> None:
         """Start a background probe that marks the server as ready."""
-        ready_monitor = threading.Thread(
-            target=self._monitor_server_readiness,
-            name=f"{class_name}ReadyMonitor",
-            daemon=True,
-        )
+        ready_monitor = threading.Thread(target=self._monitor_server_readiness, name=f"{class_name}ReadyMonitor", daemon=True)
         self._ready_monitor_thread = ready_monitor
         ready_monitor.start()
 
