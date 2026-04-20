@@ -1,9 +1,9 @@
-"""Tests for the DNP3 server."""
+"""Tests for the native DNP3 outstation server."""
 
 from types import SimpleNamespace
 
 import pytest
-from cursus.dnp3.server import Dnp3OutstationConfig, Dnp3Server
+from cursus.dnp3.outstation_server import Dnp3OutstationConfig, Dnp3OutstationServer
 
 
 class _FakeConsoleLogger:
@@ -117,11 +117,13 @@ def _build_fake_modules():
 def test_initialization(monkeypatch: pytest.MonkeyPatch) -> None:
     asiodnp3, asiopal, opendnp3, managers, config = _build_fake_modules()
     monkeypatch.setattr(
-        "cursus.dnp3.server._require_pydnp3",
+        "cursus.dnp3.outstation_server._require_pydnp3",
         lambda: (asiodnp3, asiopal, opendnp3),
     )
 
-    server = Dnp3Server(ip="127.0.0.1", port=20000, config=Dnp3OutstationConfig())
+    server = Dnp3OutstationServer(
+        ip="127.0.0.1", port=20000, config=Dnp3OutstationConfig()
+    )
 
     assert server._ip == "127.0.0.1"
     assert server._port == 20000
@@ -136,16 +138,20 @@ def test_initialization(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_start_and_stop(monkeypatch: pytest.MonkeyPatch) -> None:
     asiodnp3, asiopal, opendnp3, managers, _config = _build_fake_modules()
     monkeypatch.setattr(
-        "cursus.dnp3.server._require_pydnp3",
+        "cursus.dnp3.outstation_server._require_pydnp3",
         lambda: (asiodnp3, asiopal, opendnp3),
     )
 
     def _raise_keyboard_interrupt(_seconds: int) -> None:
         raise KeyboardInterrupt
 
-    monkeypatch.setattr("cursus.dnp3.server.time.sleep", _raise_keyboard_interrupt)
+    monkeypatch.setattr(
+        "cursus.dnp3.outstation_server.time.sleep", _raise_keyboard_interrupt
+    )
 
-    server = Dnp3Server(ip="127.0.0.1", port=20000, config=Dnp3OutstationConfig())
+    server = Dnp3OutstationServer(
+        ip="127.0.0.1", port=20000, config=Dnp3OutstationConfig()
+    )
     manager = managers[0]
     outstation = manager.channel.outstation
 
@@ -159,11 +165,13 @@ def test_start_and_stop(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_point_updates(monkeypatch: pytest.MonkeyPatch) -> None:
     asiodnp3, asiopal, opendnp3, managers, _config = _build_fake_modules()
     monkeypatch.setattr(
-        "cursus.dnp3.server._require_pydnp3",
+        "cursus.dnp3.outstation_server._require_pydnp3",
         lambda: (asiodnp3, asiopal, opendnp3),
     )
 
-    server = Dnp3Server(ip="127.0.0.1", port=20000, config=Dnp3OutstationConfig())
+    server = Dnp3OutstationServer(
+        ip="127.0.0.1", port=20000, config=Dnp3OutstationConfig()
+    )
     outstation = managers[0].channel.outstation
 
     server.update_binary_input(index=3, value=True)

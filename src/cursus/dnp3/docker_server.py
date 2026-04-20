@@ -6,6 +6,8 @@ import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
+from cursus.dnp3.outstation_server import Dnp3OutstationConfig
+
 if TYPE_CHECKING:
     from decima.logger import CustomLogger
 
@@ -13,12 +15,13 @@ if TYPE_CHECKING:
 class Dnp3DockerServer:
     """DNP3 outstation emulator running in a Docker container."""
 
-    def __init__(self, ip: str, port: int) -> None:
+    def __init__(self, ip: str, port: int, config: Dnp3OutstationConfig | None = None) -> None:
         """Initialize the DNP3 Docker server."""
         logger_name = f"{self.__class__.__module__}.{self.__class__.__name__}"
         self.logger: CustomLogger = cast("CustomLogger", logging.getLogger(logger_name))
         self._ip = ip
         self._port = port
+        self._config = config or Dnp3OutstationConfig()
         self._running = False
 
     def start(self) -> None:
@@ -61,7 +64,16 @@ class Dnp3DockerServer:
 
     def _compose_environment(self) -> dict[str, str]:
         env = os.environ.copy()
-        env.update({"DNP3_HOST": "0.0.0.0", "DNP3_PORT": str(self._port)})  # noqa: S104
+        env.update(
+            {
+                "DNP3_HOST": "0.0.0.0",  # noqa: S104
+                "DNP3_PORT": str(self._port),
+                "DNP3_DATABASE_SIZE": str(self._config.database_size),
+                "DNP3_EVENT_BUFFER_SIZE": str(self._config.event_buffer_size),
+                "DNP3_LOCAL_ADDR": str(self._config.local_addr),
+                "DNP3_REMOTE_ADDR": str(self._config.remote_addr),
+            },
+        )
         return env
 
     @property

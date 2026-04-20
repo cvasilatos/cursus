@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import TYPE_CHECKING, cast
 
@@ -6,7 +7,7 @@ if TYPE_CHECKING:
 from pymodbus.datastore import ModbusDeviceContext, ModbusSequentialDataBlock
 from pymodbus.datastore.context import ModbusServerContext
 from pymodbus.pdu.device import ModbusDeviceIdentification
-from pymodbus.server import StartTcpServer
+from pymodbus.server import ModbusTcpServer
 
 
 class MbtcpServer:
@@ -44,6 +45,8 @@ class MbtcpServer:
         self._identity.ProductName = "ETHERNET Programmable Fieldbus Controller"
         self._identity.ModelName = "PFC200"
         self._identity.MajorMinorRevision = "03.01.02"
+        self._server: ModbusTcpServer | None = None
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     def start(self) -> None:
         """Start the Modbus TCP server.
@@ -58,4 +61,33 @@ class MbtcpServer:
 
         """
         self.logger.info(f"Starting Modbus TCP server at {self._ip}:{self._port}")
-        StartTcpServer(context=self._context, identity=self._identity, address=(self._ip, self._port))
+        loop = asyncio.new_event_loop()
+        self._loop = loop
+
+        try:
+            asyncio.set_event_loop(loop)
+            server = loop.run_until_complete(self._create_server())
+            self._server = server
+            loop.run_until_complete(server.serve_forever())
+        finally:
+            asyncio.set_event_loop(None)
+            loop.close()
+            self._server = None
+            self._loop = None
+
+    def stop(self) -> None:
+        """Stop the Modbus TCP server when it is running."""
+        if self._server is None or self._loop is None:
+            return
+
+        self.logger.info(f"Stopping Modbus TCP server at {self._ip}:{self._port}")
+        shutdown = asyncio.run_coroutine_threadsafe(self._server.shutdown(), self._loop)
+        shutdown.result(timeout=5)
+
+    async def _create_server(self) -> ModbusTcpServer:
+        """Create the Modbus server while an event loop is active."""
+        return ModbusTcpServer(
+            context=self._context,
+            identity=self._identity,
+            address=(self._ip, self._port),
+        )

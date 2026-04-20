@@ -1,7 +1,7 @@
 import logging
 import os
 
-from cursus.dnp3.server import Dnp3OutstationConfig, Dnp3Server
+from cursus.dnp3.outstation_server import Dnp3OutstationConfig, Dnp3OutstationServer
 
 
 def _read_int(name: str, default: int) -> int:
@@ -12,7 +12,7 @@ def main() -> None:
     """Start the in-container DNP3 server using environment configuration."""
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 
-    server = Dnp3Server(
+    server = Dnp3OutstationServer(
         ip=os.environ.get("DNP3_HOST", "0.0.0.0"),  # noqa: S104
         port=_read_int("DNP3_PORT", 20000),
         config=Dnp3OutstationConfig(

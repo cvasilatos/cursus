@@ -1,5 +1,6 @@
 """Tests for the Docker-backed DNP3 server."""
 
+from cursus.dnp3.outstation_server import Dnp3OutstationConfig
 from cursus.dnp3.docker_server import Dnp3DockerServer
 
 
@@ -29,6 +30,30 @@ def test_compose_environment_sets_runtime_binding() -> None:
 
     assert env["DNP3_HOST"] == "0.0.0.0"
     assert env["DNP3_PORT"] == "21000"
+    assert env["DNP3_DATABASE_SIZE"] == "10"
+    assert env["DNP3_EVENT_BUFFER_SIZE"] == "10"
+    assert env["DNP3_LOCAL_ADDR"] == "10"
+    assert env["DNP3_REMOTE_ADDR"] == "1"
+
+
+def test_compose_environment_includes_outstation_config() -> None:
+    server = Dnp3DockerServer(
+        ip="127.0.0.1",
+        port=21000,
+        config=Dnp3OutstationConfig(
+            database_size=32,
+            event_buffer_size=16,
+            local_addr=11,
+            remote_addr=2,
+        ),
+    )
+
+    env = server._compose_environment()
+
+    assert env["DNP3_DATABASE_SIZE"] == "32"
+    assert env["DNP3_EVENT_BUFFER_SIZE"] == "16"
+    assert env["DNP3_LOCAL_ADDR"] == "11"
+    assert env["DNP3_REMOTE_ADDR"] == "2"
 
 
 def test_start_runs_compose_up(monkeypatch) -> None:

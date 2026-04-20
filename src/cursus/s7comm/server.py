@@ -1,5 +1,6 @@
 import logging
 from ctypes import c_byte
+from threading import Event
 from typing import TYPE_CHECKING, cast
 
 import snap7
@@ -27,6 +28,7 @@ class S7commServer:
         self._ip: str = ip
         self._port: int = port
         self._size: int = size
+        self._stopped = Event()
 
         # Create the snap7 server instance
         self._server = snap7.Server()
@@ -71,12 +73,19 @@ class S7commServer:
 
         """
         self.logger.info(f"Starting S7comm server at {self._ip}:{self._port}")
+        self._stopped.clear()
         self._server.start_to(self._ip, self._port)
-        while True:
+        while not self._stopped.is_set():
             try:
                 self._server.pick_event()
             except Exception:
                 self.logger.exception("Error occurred while running S7comm server")
+
+    def stop(self) -> None:
+        """Stop the S7comm server event loop and release the socket."""
+        self.logger.info(f"Stopping S7comm server at {self._ip}:{self._port}")
+        self._stopped.set()
+        self._server.stop()
 
 
 if __name__ == "__main__":

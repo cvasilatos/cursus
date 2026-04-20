@@ -55,7 +55,7 @@ pip install -e .
 pip install ruff pytest pytest-cov
 ```
 
-`Starter(protocol="dnp3", ...)` uses Docker Compose to run the bundled DNP3 image. `cursus.dnp3.server.Dnp3Server` remains available for direct use inside environments where `pydnp3` is installed.
+`Starter(protocol="dnp3", ...)` now follows the same `cursus.<protocol>.server.<Protocol>Server` convention as the other protocols and uses the bundled Docker runtime through `cursus.dnp3.server.Dnp3Server`. The native `pydnp3` outstation remains available as `cursus.dnp3.server.Dnp3OutstationServer`.
 
 ## Usage
 
@@ -90,17 +90,17 @@ python -m cursus.s7comm.server
 #### DNP3 Outstation Server
 
 ```python
-from cursus.dnp3.server import Dnp3Server
+from cursus.dnp3.server import Dnp3OutstationServer
 
 # Create and start a DNP3 outstation
-server = Dnp3Server(ip="127.0.0.1", port=20000)
+server = Dnp3OutstationServer(ip="127.0.0.1", port=20000)
 server.start()  # Blocks and runs until interrupted
 ```
 
 Or run directly from command line:
 
 ```bash
-python -m cursus.dnp3.server
+python -m cursus.dnp3.outstation_server
 ```
 
 ### Using the Starter Class

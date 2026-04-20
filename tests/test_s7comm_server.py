@@ -100,6 +100,7 @@ class TestS7commServer:
         mock_server_instance.start_to.assert_called_once_with("127.0.0.1", 5102)
         # Verify pick_event was called at least once
         mock_server_instance.pick_event.assert_called()
+        assert server._stopped.is_set() is False
 
     @patch("cursus.s7comm.server.snap7.Server")
     def test_start_server_different_address(self, mock_server_class: Mock) -> None:
@@ -114,6 +115,19 @@ class TestS7commServer:
             server.start()
 
         mock_server_instance.start_to.assert_called_once_with("192.168.1.50", 5103)
+
+    @patch("cursus.s7comm.server.snap7.Server")
+    def test_stop_server(self, mock_server_class: Mock) -> None:
+        """Test that stopping the server breaks the loop and closes the listener."""
+        mock_server_instance = MagicMock()
+        mock_server_class.return_value = mock_server_instance
+
+        server = S7commServer(ip="127.0.0.1", port=5102)
+
+        server.stop()
+
+        assert server._stopped.is_set() is True
+        mock_server_instance.stop.assert_called_once_with()
 
     @patch("cursus.s7comm.server.snap7.Server")
     def test_server_event_loop(self, mock_server_class: Mock) -> None:
