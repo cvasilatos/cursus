@@ -11,10 +11,11 @@ lint.ignore = [
     "EM102", # Exception must not use an f-string literal, assign to variable first
     "D100", # Missing docstring in public module
     "D104", # Missing docstring in public package
+    "COM812", # Missing trailing comma in a list or tuple
 ]
 
-lint.isort = { combine-as-imports = true, split-on-trailing-comma=true }
-format = { quote-style = "double", indent-style = "space", skip-magic-trailing-comma = false }
+lint.isort = { combine-as-imports = true, split-on-trailing-comma=false }
+format = { quote-style = "double", indent-style = "space" }
 
 
 [lint.pydocstyle]

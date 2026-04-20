@@ -208,7 +208,7 @@ def test_connect_reconnect():
     import threading
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
-        probe.bind(("127.0.0.1", 10200))
+        probe.bind(("127.0.0.1", 0))
         host, port = probe.getsockname()
 
     srv = S7commServer(ip=host, port=port, size=64)
@@ -235,7 +235,7 @@ def test_connect_reconnect():
                     "0300002402f080320100000350000e0005056e140a10020001a20981a6338c00040008b7".encode()
                 )
                 client_sock.recv(1024)
-            except (socket.timeout, ConnectionResetError, BrokenPipeError):
+            except socket.timeout, ConnectionResetError, BrokenPipeError:
                 client_sock.close()
                 client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 client_sock.settimeout(0.1)

@@ -1,7 +1,8 @@
+# cursus/dnp3/docker_server.py
+
 import logging
 import os
 import subprocess
-import threading
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -10,49 +11,42 @@ if TYPE_CHECKING:
 
 
 class Dnp3DockerServer:
-    """Run the DNP3 outstation inside Docker Compose."""
+    """DNP3 outstation emulator running in a Docker container."""
 
     def __init__(self, ip: str, port: int) -> None:
-        """Initialize the Docker-backed DNP3 runtime."""
+        """Initialize the DNP3 Docker server."""
         logger_name = f"{self.__class__.__module__}.{self.__class__.__name__}"
         self.logger: CustomLogger = cast("CustomLogger", logging.getLogger(logger_name))
         self._ip = ip
         self._port = port
-        self._stop_event = threading.Event()
         self._running = False
 
     def start(self) -> None:
-        """Build and start the DNP3 Docker service, then block until stopped."""
+        """Start the DNP3 Docker service."""
         if self._running:
             self.logger.warning("DNP3 Docker service is already running")
             return
 
-        self._stop_event.clear()
         self.logger.info(f"Starting DNP3 Docker service at {self._ip}:{self._port}")
-        self._run_compose("up", "--build", "-d")
+        self._run_compose("up", "--build", "-d", timeout=60)
         self._running = True
-
-        try:
-            self._stop_event.wait()
-        finally:
-            try:
-                self._run_compose("down", "--remove-orphans")
-            finally:
-                self._running = False
 
     def stop(self) -> None:
         """Stop the DNP3 Docker service."""
         if not self._running:
             return
 
-        self._stop_event.set()
+        try:
+            self._run_compose("down", "--remove-orphans", timeout=20)
+        except subprocess.TimeoutExpired:
+            self.logger.warning("docker compose down timed out for DNP3, forcing shutdown")
+            self._run_compose("kill", timeout=10)
+            self._run_compose("down", "--remove-orphans", timeout=20)
+        finally:
+            self._running = False
 
-    def _run_compose(self, *args: str) -> None:
-        subprocess.run(  # noqa: S603
-            self._compose_command(*args),
-            check=True,
-            env=self._compose_environment(),
-        )
+    def _run_compose(self, *args: str, timeout: int) -> None:
+        subprocess.run(self._compose_command(*args), check=True, env=self._compose_environment(), timeout=timeout)  # noqa: S603
 
     def _compose_command(self, *args: str) -> list[str]:
         return [
@@ -67,12 +61,7 @@ class Dnp3DockerServer:
 
     def _compose_environment(self) -> dict[str, str]:
         env = os.environ.copy()
-        env.update(
-            {
-                "DNP3_HOST": "0.0.0.0",  # noqa: S104
-                "DNP3_PORT": str(self._port),
-            },
-        )
+        env.update({"DNP3_HOST": "0.0.0.0", "DNP3_PORT": str(self._port)})  # noqa: S104
         return env
 
     @property

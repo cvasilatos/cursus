@@ -86,11 +86,7 @@ class Starter:
         return is_ready
 
     def stop_server(self) -> None:
-        """Stop the running protocol server when the backend supports it."""
-        if self._server is None:
-            self.logger.warning(f"No {self._protocol} server is currently running")
-            return
-
+        """Stop the server if it is running and clean up threads."""
         stop = getattr(self._server, "stop", None)
         if stop is None:
             self.logger.warning(f"{self._protocol} server does not support stop()")
@@ -100,6 +96,8 @@ class Starter:
             stop()
             if self._server_thread is not None and self._server_thread.is_alive():
                 self._server_thread.join(timeout=self._delay + 1)
+                if self._server_thread.is_alive():
+                    self.logger.warning(f"{self._protocol} server thread did not exit cleanly")
         finally:
             self._ready_event.clear()
             self._server = None
