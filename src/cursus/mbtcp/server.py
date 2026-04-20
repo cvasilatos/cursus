@@ -28,10 +28,10 @@ class MbtcpServer:
         self._port: int = port
 
         # SequentialDataBlock to cover 0..size-1 for all tables
-        zero_ir = ModbusSequentialDataBlock(0, list(range(size)))
-        zero_hr = ModbusSequentialDataBlock(0, list(range(size)))
-        zero_di = ModbusSequentialDataBlock(0, list(range(size)))
-        zero_co = ModbusSequentialDataBlock(0, list(range(size)))
+        zero_ir = ModbusSequentialDataBlock(1, list(range(size)))
+        zero_hr = ModbusSequentialDataBlock(1, list(range(size)))
+        zero_di = ModbusSequentialDataBlock(1, list(range(size)))
+        zero_co = ModbusSequentialDataBlock(1, list(range(size)))
 
         store = ModbusDeviceContext(ir=zero_ir, hr=zero_hr, di=zero_di, co=zero_co)
 

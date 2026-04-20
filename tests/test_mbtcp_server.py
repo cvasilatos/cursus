@@ -55,7 +55,7 @@ class TestMbtcpServer:
         # Verify each call had correct parameters
         for call_args in mock_data_block.call_args_list:
             args, _kwargs = call_args
-            assert args[0] == 0  # Starting address
+            assert args[0] == 1  # Starting address
             assert len(args[1]) == custom_size  # Size of data block
 
     @patch("cursus.mbtcp.server.StartTcpServer")
