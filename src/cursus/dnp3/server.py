@@ -20,13 +20,7 @@ class Dnp3OutstationConfig:
 
 
 def _require_pydnp3() -> tuple[ModuleType, ModuleType, ModuleType]:
-    try:
-        package = importlib.import_module("pydnp3")
-    except ModuleNotFoundError as exc:
-        if exc.name != "pydnp3":
-            raise
-        message = "pydnp3 is required to use cursus.dnp3.server"
-        raise ModuleNotFoundError(message) from exc
+    package: ModuleType = importlib.import_module("pydnp3")
 
     return (
         cast("ModuleType", package.asiodnp3),
