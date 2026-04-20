@@ -1,8 +1,8 @@
 services:
   dnp3:
     build:
-      context: ../../../..
-      dockerfile: src/cursus/dnp3/assets/Dockerfile
+      context: ../../..
+      dockerfile: cursus/dnp3/assets/Dockerfile
     ports:
       - "${DNP3_PORT:-20000}:${DNP3_PORT:-20000}"
     environment:

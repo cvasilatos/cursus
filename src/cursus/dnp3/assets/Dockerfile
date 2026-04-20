@@ -24,8 +24,8 @@ RUN curl -L "$PYDNP3_URL" -o pydnp3-0.1.0.tar.gz \
 
 WORKDIR /app
 
-COPY src/cursus /app/cursus
-COPY src/cursus/dnp3/assets/run_server.py /app/run_server.py
+COPY cursus /app/cursus
+COPY cursus/dnp3/assets/run_server.py /app/run_server.py
 
 ENV PYTHONPATH=/app
 EXPOSE 20000

@@ -58,7 +58,7 @@ class TestStarter:
 
         # Check thread creation parameters
         call_kwargs = mock_thread.call_args_list[0][1]
-        assert call_kwargs["target"] == mock_server_instance.start
+        assert call_kwargs["target"] == starter._run_server
         assert call_kwargs["name"] == "MbtcpServer"
         assert call_kwargs["daemon"] is True
         ready_call_kwargs = mock_thread.call_args_list[1][1]
@@ -103,7 +103,7 @@ class TestStarter:
 
         # Check thread creation parameters
         call_kwargs = mock_thread.call_args_list[0][1]
-        assert call_kwargs["target"] == mock_server_instance.start
+        assert call_kwargs["target"] == starter._run_server
         assert call_kwargs["name"] == "S7commServer"
         assert call_kwargs["daemon"] is True
         ready_call_kwargs = mock_thread.call_args_list[1][1]
@@ -146,7 +146,7 @@ class TestStarter:
         mock_server_class.assert_called_once_with(ip="127.0.0.1", port=20000)
         assert mock_thread.call_count == 2
         call_kwargs = mock_thread.call_args_list[0][1]
-        assert call_kwargs["target"] == mock_server_instance.start
+        assert call_kwargs["target"] == starter._run_server
         assert call_kwargs["name"] == "Dnp3DockerServer"
         assert call_kwargs["daemon"] is True
         ready_call_kwargs = mock_thread.call_args_list[1][1]
@@ -228,6 +228,16 @@ class TestStarter:
 
         assert starter.wait_until_ready(timeout=0.1) is True
 
+    def test_wait_until_ready_raises_when_server_failed(self) -> None:
+        """Test waiting on the ready event when the backing server crashed."""
+        starter = Starter(protocol="dnp3", port=20000, delay=1)
+        starter._server_error = RuntimeError("compose failed")
+
+        with pytest.raises(
+            RuntimeError, match="dnp3 server failed before becoming ready"
+        ):
+            starter.wait_until_ready(timeout=0.01)
+
     @patch("cursus.starter.time.sleep")
     def test_monitor_server_readiness_sets_ready_event(
         self,
@@ -243,3 +253,49 @@ class TestStarter:
 
         assert starter.ready_event.is_set() is True
         mock_sleep.assert_called_once_with(0.1)
+
+    def test_run_server_captures_startup_error(self) -> None:
+        """Test that startup errors are recorded for the caller."""
+        starter = Starter(protocol="dnp3", port=20000, delay=1)
+        starter._server = Mock()
+        starter._server.start.side_effect = RuntimeError("compose failed")
+
+        with patch.object(starter.logger, "exception") as mock_exception:
+            starter._run_server()
+
+        assert isinstance(starter._server_error, RuntimeError)
+        mock_exception.assert_called_once_with("dnp3 server crashed during startup")
+
+    @patch("cursus.starter.importlib.import_module")
+    @patch("cursus.starter.time.sleep")
+    @patch("cursus.starter.threading.Thread")
+    def test_start_server_raises_when_server_thread_fails(
+        self,
+        mock_thread: Mock,
+        mock_sleep: Mock,
+        mock_import: Mock,
+    ) -> None:
+        """Test that startup failures are surfaced synchronously."""
+        mock_module = MagicMock()
+        mock_server_class = MagicMock()
+        mock_server_instance = MagicMock()
+        mock_thread_instance = MagicMock()
+        mock_ready_thread = MagicMock()
+
+        def _start_server() -> None:
+            starter._server_error = RuntimeError("compose failed")
+
+        mock_import.return_value = mock_module
+        mock_module.Dnp3DockerServer = mock_server_class
+        mock_server_class.return_value = mock_server_instance
+        mock_thread_instance.start.side_effect = _start_server
+        mock_thread.side_effect = [mock_thread_instance, mock_ready_thread]
+
+        starter = Starter(protocol="dnp3", port=20000, delay=2)
+
+        with pytest.raises(
+            RuntimeError, match="Failed to start dnp3 server on port 20000"
+        ):
+            starter.start_server()
+
+        mock_sleep.assert_called_once_with(2)
