@@ -39,8 +39,8 @@ Then install the project:
 # Install dependencies
 uv sync
 
-# Install with test dependencies
-uv sync --extra test
+# Install with development and test dependencies
+uv sync --group dev --group test
 ```
 
 Alternatively, using pip:
@@ -49,8 +49,8 @@ Alternatively, using pip:
 # Install dependencies
 pip install -e .
 
-# Install with test dependencies
-pip install -e ".[test]"
+# Install development and test tools
+pip install ruff pytest pytest-cov
 ```
 
 ### DNP3 via Docker
@@ -61,7 +61,7 @@ If you only need the DNP3 outstation, run it in Docker instead of installing `py
 docker compose -f docker-compose.dnp3.yml up --build
 ```
 
-This starts the DNP3 server on `0.0.0.0:20000` in a dedicated Python 3.10 container. You can override the bind address, port, and DNP3 settings with environment variables in [docker-compose.dnp3.yml](/Users/cv43/projects/cursus/docker-compose.dnp3.yml:1).
+This starts the DNP3 server on `0.0.0.0:20000` in a dedicated Python 3.10 container. You can override the bind address, port, and DNP3 settings with environment variables in [`docker-compose.dnp3.yml`](./docker-compose.dnp3.yml).
 
 From Python, use the Docker-backed launcher the same way you use the other servers:
 
@@ -88,19 +88,13 @@ server = MbtcpServer(ip="127.0.0.1", port=502, size=32000)
 server.start()  # Blocks and runs the server
 ```
 
-Or run directly from command line:
-
-```bash
-python -m cursus.mbtcp.server
-```
-
 #### S7comm Server
 
 ```python
 from cursus.s7comm.server import S7commServer
 
 # Create and start an S7comm server
-server = S7commServer(ip="127.0.0.1", port=102, size=32000)
+server = S7commServer(ip="127.0.0.1", port=102, size=1024)
 server.start()  # Blocks and runs the server
 ```
 
@@ -152,34 +146,27 @@ dnp3_starter.start_server()
 
 ```bash
 # Run all tests using uv
-uv run pytest test/
+uv run pytest tests/
 
 # Run tests with coverage report
-uv run pytest test/ --cov=cursus --cov-report=term-missing
+uv run pytest tests/ --cov=cursus --cov-report=term-missing
 
 # Run tests with verbose output
-uv run pytest test/ -v
+uv run pytest tests/ -v
 ```
 
 Alternatively, using pytest directly:
 
 ```bash
 # Run all tests
-pytest test/
+python -m pytest tests/
 
 # Run tests with coverage report
-pytest test/ --cov=cursus --cov-report=term-missing
+python -m pytest tests/ --cov=cursus --cov-report=term-missing
 
 # Run tests with verbose output
-pytest test/ -v
+python -m pytest tests/ -v
 ```
-
-### Test Coverage
-
-The project has comprehensive test coverage:
-- 23 tests covering all main modules
-- 93% code coverage
-- Tests for Starter, MbtcpServer, and S7commServer classes
 
 ### Code Quality
 
@@ -187,10 +174,10 @@ This project uses ruff for linting and formatting:
 
 ```bash
 # Run linter
-uv run ruff check .
+python -m ruff check .
 
 # Format code
-uv run ruff format .
+python -m ruff format .
 ```
 
 ## API Reference
@@ -210,14 +197,14 @@ MbtcpServer(ip: str, port: int, size: int = 32000)
 ### S7commServer
 
 ```python
-S7commServer(ip: str, port: int, size: int = 32000)
+S7commServer(ip: str, port: int, size: int = 1024)
 ```
 
 **Parameters:**
 
 - `ip`: IP address to bind the server to
 - `port`: TCP port number (default S7 port is 102)
-- `size`: Size of memory areas in bytes (default: 32000)
+- `size`: Size of memory areas in bytes (default: 1024)
 
 ### Starter
 

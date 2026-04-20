@@ -17,7 +17,7 @@ class Starter:
         """Initialize the Starter with the specified protocol, port, and delay.
 
         Args:
-            protocol: The protocol name to use ("mbtcp" or "s7comm").
+            protocol: The protocol name to use ("mbtcp", "s7comm", or "dnp3").
             port: The port number for the server to bind to.
             delay: The delay in seconds to wait after starting the server.
 
