@@ -36,6 +36,14 @@ class TestStarter:
         assert starter._port == 44818
         assert starter._delay == 2
 
+    def test_initialization_bacnet_protocol(self) -> None:
+        """Test that Starter initializes with the BACnet/IP protocol."""
+        starter = Starter(protocol="bacnet", port=47808, delay=2)
+
+        assert starter._protocol == "bacnet"
+        assert starter._port == 47808
+        assert starter._delay == 2
+
     @patch("cursus.starter.importlib.import_module")
     @patch("cursus.starter.time.sleep")
     @patch("cursus.starter.threading.Thread")
@@ -210,6 +218,48 @@ class TestStarter:
         assert starter._server_thread == mock_thread_instance
         assert starter._ready_monitor_thread == mock_ready_thread
 
+    @patch("cursus.starter.importlib.import_module")
+    @patch("cursus.starter.time.sleep")
+    @patch("cursus.starter.threading.Thread")
+    def test_start_server_bacnet(
+        self,
+        mock_thread: Mock,
+        mock_sleep: Mock,
+        mock_import: Mock,
+    ) -> None:
+        """Test starting a BACnet/IP server."""
+        mock_module = MagicMock()
+        mock_server_class = MagicMock()
+        mock_server_instance = MagicMock()
+        mock_thread_instance = MagicMock()
+        mock_ready_thread = MagicMock()
+
+        mock_import.return_value = mock_module
+        mock_module.BacnetServer = mock_server_class
+        mock_server_class.return_value = mock_server_instance
+        mock_thread.side_effect = [mock_thread_instance, mock_ready_thread]
+
+        starter = Starter(protocol="bacnet", port=47808, delay=2)
+        starter.start_server()
+
+        mock_import.assert_called_once_with("cursus.bacnet.server")
+        mock_server_class.assert_called_once_with(ip="127.0.0.1", port=47808)
+        assert mock_thread.call_count == 2
+        call_kwargs = mock_thread.call_args_list[0][1]
+        assert call_kwargs["target"] == starter._run_server
+        assert call_kwargs["name"] == "BacnetServer"
+        assert call_kwargs["daemon"] is True
+        ready_call_kwargs = mock_thread.call_args_list[1][1]
+        assert ready_call_kwargs["target"] == starter._monitor_server_readiness
+        assert ready_call_kwargs["name"] == "BacnetServerReadyMonitor"
+        assert ready_call_kwargs["daemon"] is True
+        mock_thread_instance.start.assert_called_once()
+        mock_ready_thread.start.assert_called_once()
+        mock_sleep.assert_called_once_with(2)
+        assert starter._server == mock_server_instance
+        assert starter._server_thread == mock_thread_instance
+        assert starter._ready_monitor_thread == mock_ready_thread
+
     @pytest.mark.parametrize("delay_value", [1, 2, 5])
     @patch("cursus.starter.importlib.import_module")
     @patch("cursus.starter.time.sleep")
@@ -349,3 +399,23 @@ class TestStarter:
             starter.start_server()
 
         mock_sleep.assert_called_once_with(2)
+
+    @patch("cursus.starter.socket.create_connection")
+    def test_is_server_ready_uses_tcp_probe_for_non_bacnet(
+        self, mock_connection: Mock
+    ) -> None:
+        """Test that non-BACnet protocols use the TCP readiness probe."""
+        starter = Starter(protocol="enip", port=44818, delay=1)
+        mock_connection.return_value.__enter__ = Mock(return_value=object())
+        mock_connection.return_value.__exit__ = Mock(return_value=None)
+
+        assert starter._is_server_ready() is True
+        mock_connection.assert_called_once_with(("127.0.0.1", 44818), timeout=0.1)
+
+    @patch.object(Starter, "_is_bacnet_server_ready", return_value=True)
+    def test_is_server_ready_uses_bacnet_probe(self, mock_bacnet_ready: Mock) -> None:
+        """Test that BACnet/IP uses the UDP readiness probe."""
+        starter = Starter(protocol="bacnet", port=47808, delay=1)
+
+        assert starter._is_server_ready() is True
+        mock_bacnet_ready.assert_called_once_with()

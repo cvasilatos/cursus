@@ -1,6 +1,6 @@
 # CursusD (Cursus Daemon)
 
-A Python server daemon for Industrial Control System (ICS) protocols. CursusD provides implementations for **Modbus TCP**, **S7comm**, **EtherNet/IP (CIP)**, and **DNP3 outstation** protocols, enabling simulation of industrial controllers for testing, development, security research, and training environments.
+A Python server daemon for Industrial Control System (ICS) protocols. CursusD provides implementations for **Modbus TCP**, **S7comm**, **EtherNet/IP (CIP)**, **BACnet/IP**, and **DNP3 outstation** protocols, enabling simulation of industrial controllers for testing, development, security research, and training environments.
 
 ## Features
 
@@ -19,6 +19,12 @@ A Python server daemon for Industrial Control System (ICS) protocols. CursusD pr
   - Supports encapsulation session registration and `SendRRData`
   - Exposes CIP Identity and Assembly objects for `Get_Attribute_Single` / `Set_Attribute_Single`
   - Defaults to Allen-Bradley-like identity values for discovery and testing
+
+- **BACnet/IP Server**: Pure-Python BACnet/IP UDP emulator
+  - Handles `Who-Is` / `I-Am` device discovery
+  - Supports `ReadProperty` and `WriteProperty` for a BACnet Device object and Analog Value objects
+  - Exposes configurable object metadata and analog `present-value` points
+  - Uses a BACnet/IP-specific readiness probe in `Starter`
 
 - **DNP3 Outstation Server**: DNP3 outstation emulator using pydnp3
   - TCP server mode for DNP3 master connectivity
@@ -119,6 +125,16 @@ server = EnipServer(ip="127.0.0.1", port=44818)
 server.start()  # Blocks and runs the server
 ```
 
+#### BACnet/IP Server
+
+```python
+from cursus.bacnet.server import BacnetServer
+
+# Create and start a BACnet/IP server
+server = BacnetServer(ip="127.0.0.1", port=47808)
+server.start()  # Blocks and runs the server
+```
+
 ### Using the Starter Class
 
 The Starter class provides a convenient way to initialize and start protocol servers in daemon threads:
@@ -138,6 +154,10 @@ s7comm_starter.start_server()
 enip_starter = Starter(protocol="enip", port=44818, delay=1)
 enip_starter.start_server()
 
+# Start a BACnet/IP server
+bacnet_starter = Starter(protocol="bacnet", port=47808, delay=1)
+bacnet_starter.start_server()
+
 # Start a DNP3 outstation server
 dnp3_starter = Starter(protocol="dnp3", port=20000, delay=2)
 dnp3_starter.start_server()
@@ -145,7 +165,7 @@ dnp3_starter.wait_until_ready(timeout=30)
 dnp3_starter.stop_server()
 ```
 
-`Starter.ready_event` is set when the server endpoint is reachable over TCP. This provides a protocol-neutral readiness signal for projects using Cursus, including `dnp3` when it is started through Docker and needs extra time before accepting connections.
+`Starter.ready_event` is set when the server endpoint answers its readiness probe. For TCP-based protocols this is a TCP connect check; for `bacnet` it is a BACnet/IP `Who-Is` / `I-Am` exchange. This provides a protocol-neutral readiness signal for projects using Cursus, including `dnp3` when it is started through Docker and needs extra time before accepting connections.
 
 For `dnp3`, Docker and the Docker Compose plugin must be installed on the machine running the starter.
 
@@ -227,6 +247,18 @@ EnipServer(ip: str, port: int = 44818, config: EnipServerConfig | None = None)
 - `port`: TCP port number (default EtherNet/IP explicit-messaging port is 44818)
 - `config`: Optional identity and assembly configuration for the emulator
 
+### BacnetServer
+
+```python
+BacnetServer(ip: str, port: int = 47808, config: BacnetServerConfig | None = None)
+```
+
+**Parameters:**
+
+- `ip`: IP address to bind the server to
+- `port`: UDP port number (default BACnet/IP port is 47808 / `0xBAC0`)
+- `config`: Optional BACnet device and analog-value configuration for the emulator
+
 ### Starter
 
 ```python
@@ -235,13 +267,13 @@ Starter(protocol: str, port: int, delay: int)
 
 **Parameters:**
 
-- `protocol`: Protocol name ("mbtcp", "s7comm", "enip", or "dnp3")
+- `protocol`: Protocol name ("mbtcp", "s7comm", "enip", "bacnet", or "dnp3")
 - `port`: Port number for the server
 - `delay`: Delay in seconds after starting the server
 
 **Readiness:**
 
-- `ready_event`: `threading.Event` set once the server endpoint accepts TCP connections
+- `ready_event`: `threading.Event` set once the server endpoint answers its readiness probe
 - `wait_until_ready(timeout: float | None = None) -> bool`: wait for the ready signal
 
 ## License

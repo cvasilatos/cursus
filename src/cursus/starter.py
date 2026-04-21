@@ -10,6 +10,11 @@ if TYPE_CHECKING:
 
     from decima.logger import CustomLogger
 
+_BACNET_IP_WHO_IS_REQUEST = bytes.fromhex("81 0a 00 08 01 00 10 08")
+_BACNET_IP_I_AM_HEADER = bytes([0x10, 0x00])
+_BACNET_READINESS_RESPONSE_OFFSET = 6
+_BACNET_MIN_RESPONSE_SIZE = 8
+
 
 class Starter:
     """Starter class to initialize and start protocol servers."""
@@ -18,7 +23,7 @@ class Starter:
         """Initialize the Starter with the specified protocol, port, and delay.
 
         Args:
-            protocol: The protocol name to use ("mbtcp", "s7comm", "enip", or "dnp3").
+            protocol: The protocol name to use ("mbtcp", "s7comm", "enip", "bacnet", or "dnp3").
             port: The port number for the server to bind to.
             delay: The delay in seconds to wait after starting the server.
 
@@ -47,7 +52,7 @@ class Starter:
         Dynamically imports the server module based on the protocol name,
         creates a server instance, and starts it in a daemon thread. A second
         daemon thread probes the configured endpoint and sets `ready_event`
-        once the server is reachable. After starting the server, this method
+        once the server is reachable for the protocol-specific probe. After starting the server, this method
         still waits for the configured delay period for backwards compatibility.
 
         """
@@ -131,9 +136,31 @@ class Starter:
             time.sleep(0.1)
 
     def _is_server_ready(self) -> bool:
+        """Return whether the configured server responds to its readiness probe."""
+        if self._protocol.lower() == "bacnet":
+            return self._is_bacnet_server_ready()
+        return self._is_tcp_server_ready()
+
+    def _is_tcp_server_ready(self) -> bool:
         """Return whether the server endpoint is reachable over TCP."""
         try:
             with socket.create_connection(("127.0.0.1", self._port), timeout=0.1):
                 return True
         except OSError:
             return False
+
+    def _is_bacnet_server_ready(self) -> bool:
+        """Return whether the BACnet/IP endpoint replies to `Who-Is`."""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client:
+                client.settimeout(0.1)
+                client.sendto(_BACNET_IP_WHO_IS_REQUEST, ("127.0.0.1", self._port))
+                response, _address = client.recvfrom(1024)
+        except OSError:
+            return False
+
+        return (
+            response.startswith(bytes.fromhex("81 0a"))
+            and len(response) >= _BACNET_MIN_RESPONSE_SIZE
+            and response[_BACNET_READINESS_RESPONSE_OFFSET : _BACNET_READINESS_RESPONSE_OFFSET + len(_BACNET_IP_I_AM_HEADER)] == _BACNET_IP_I_AM_HEADER
+        )
