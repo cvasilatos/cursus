@@ -28,6 +28,14 @@ class TestStarter:
         assert starter._port == 5102
         assert starter._delay == 2
 
+    def test_initialization_enip_protocol(self) -> None:
+        """Test that Starter initializes with the EtherNet/IP protocol."""
+        starter = Starter(protocol="enip", port=44818, delay=2)
+
+        assert starter._protocol == "enip"
+        assert starter._port == 44818
+        assert starter._delay == 2
+
     @patch("cursus.starter.importlib.import_module")
     @patch("cursus.starter.time.sleep")
     @patch("cursus.starter.threading.Thread")
@@ -152,6 +160,48 @@ class TestStarter:
         ready_call_kwargs = mock_thread.call_args_list[1][1]
         assert ready_call_kwargs["target"] == starter._monitor_server_readiness
         assert ready_call_kwargs["name"] == "Dnp3ServerReadyMonitor"
+        assert ready_call_kwargs["daemon"] is True
+        mock_thread_instance.start.assert_called_once()
+        mock_ready_thread.start.assert_called_once()
+        mock_sleep.assert_called_once_with(2)
+        assert starter._server == mock_server_instance
+        assert starter._server_thread == mock_thread_instance
+        assert starter._ready_monitor_thread == mock_ready_thread
+
+    @patch("cursus.starter.importlib.import_module")
+    @patch("cursus.starter.time.sleep")
+    @patch("cursus.starter.threading.Thread")
+    def test_start_server_enip(
+        self,
+        mock_thread: Mock,
+        mock_sleep: Mock,
+        mock_import: Mock,
+    ) -> None:
+        """Test starting an EtherNet/IP server."""
+        mock_module = MagicMock()
+        mock_server_class = MagicMock()
+        mock_server_instance = MagicMock()
+        mock_thread_instance = MagicMock()
+        mock_ready_thread = MagicMock()
+
+        mock_import.return_value = mock_module
+        mock_module.EnipServer = mock_server_class
+        mock_server_class.return_value = mock_server_instance
+        mock_thread.side_effect = [mock_thread_instance, mock_ready_thread]
+
+        starter = Starter(protocol="enip", port=44818, delay=2)
+        starter.start_server()
+
+        mock_import.assert_called_once_with("cursus.enip.server")
+        mock_server_class.assert_called_once_with(ip="127.0.0.1", port=44818)
+        assert mock_thread.call_count == 2
+        call_kwargs = mock_thread.call_args_list[0][1]
+        assert call_kwargs["target"] == starter._run_server
+        assert call_kwargs["name"] == "EnipServer"
+        assert call_kwargs["daemon"] is True
+        ready_call_kwargs = mock_thread.call_args_list[1][1]
+        assert ready_call_kwargs["target"] == starter._monitor_server_readiness
+        assert ready_call_kwargs["name"] == "EnipServerReadyMonitor"
         assert ready_call_kwargs["daemon"] is True
         mock_thread_instance.start.assert_called_once()
         mock_ready_thread.start.assert_called_once()

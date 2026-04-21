@@ -1,6 +1,6 @@
 # CursusD (Cursus Daemon)
 
-A Python server daemon for Industrial Control System (ICS) protocols. CursusD provides implementations for **Modbus TCP**, **S7comm**, and **DNP3 outstation** protocols, enabling simulation of industrial controllers for testing, development, security research, and training environments.
+A Python server daemon for Industrial Control System (ICS) protocols. CursusD provides implementations for **Modbus TCP**, **S7comm**, **EtherNet/IP (CIP)**, and **DNP3 outstation** protocols, enabling simulation of industrial controllers for testing, development, security research, and training environments.
 
 ## Features
 
@@ -13,6 +13,12 @@ A Python server daemon for Industrial Control System (ICS) protocols. CursusD pr
   - Supports multiple S7 data areas (DB, PA, PE, MK, TM, CT)
   - Configurable memory sizes
   - Compatible with standard S7 clients
+
+- **EtherNet/IP Server**: Pure-Python EtherNet/IP explicit-message emulator
+  - Handles EtherNet/IP discovery commands (`ListServices`, `ListIdentity`, `ListInterfaces`)
+  - Supports encapsulation session registration and `SendRRData`
+  - Exposes CIP Identity and Assembly objects for `Get_Attribute_Single` / `Set_Attribute_Single`
+  - Defaults to Allen-Bradley-like identity values for discovery and testing
 
 - **DNP3 Outstation Server**: DNP3 outstation emulator using pydnp3
   - TCP server mode for DNP3 master connectivity
@@ -103,6 +109,16 @@ Or run directly from command line:
 python -m cursus.dnp3.outstation_server
 ```
 
+#### EtherNet/IP Server
+
+```python
+from cursus.enip.server import EnipServer
+
+# Create and start an EtherNet/IP explicit-message server
+server = EnipServer(ip="127.0.0.1", port=44818)
+server.start()  # Blocks and runs the server
+```
+
 ### Using the Starter Class
 
 The Starter class provides a convenient way to initialize and start protocol servers in daemon threads:
@@ -117,6 +133,10 @@ mbtcp_starter.start_server()
 # Start an S7comm server
 s7comm_starter = Starter(protocol="s7comm", port=102, delay=2)
 s7comm_starter.start_server()
+
+# Start an EtherNet/IP server
+enip_starter = Starter(protocol="enip", port=44818, delay=1)
+enip_starter.start_server()
 
 # Start a DNP3 outstation server
 dnp3_starter = Starter(protocol="dnp3", port=20000, delay=2)
@@ -195,6 +215,18 @@ S7commServer(ip: str, port: int, size: int = 1024)
 - `port`: TCP port number (default S7 port is 102)
 - `size`: Size of memory areas in bytes (default: 1024)
 
+### EnipServer
+
+```python
+EnipServer(ip: str, port: int = 44818, config: EnipServerConfig | None = None)
+```
+
+**Parameters:**
+
+- `ip`: IP address to bind the server to
+- `port`: TCP port number (default EtherNet/IP explicit-messaging port is 44818)
+- `config`: Optional identity and assembly configuration for the emulator
+
 ### Starter
 
 ```python
@@ -203,7 +235,7 @@ Starter(protocol: str, port: int, delay: int)
 
 **Parameters:**
 
-- `protocol`: Protocol name ("mbtcp", "s7comm", or "dnp3")
+- `protocol`: Protocol name ("mbtcp", "s7comm", "enip", or "dnp3")
 - `port`: Port number for the server
 - `delay`: Delay in seconds after starting the server
 
